@@ -5,12 +5,12 @@ import { ArrowDownAZ, ArrowUpAZ, Plus } from '@lucide/vue'
 import { Button } from '@/Components/ui/button'
 import { Input } from '@/Components/ui/input'
 
-// objek data di atas
 const props = defineProps({
     filters:   { type: Object, default: () => ({}) },
     platforms: { type: Array, required: true },
     canManage: { type: Boolean, default: false },
 })
+
 const emit = defineEmits(['add'])
 
 const state = reactive({
@@ -19,44 +19,71 @@ const state = reactive({
     sort:     props.filters.sort ?? 'asc',
 })
 
-// kirim cuma nilai yg terisi, spy URL bersih (page otomatis balik ke 1)
 const apply = () => {
-    const query = Object.fromEntries(Object.entries(state).filter(([, v]) => v !== ''))
-
-    router.get(route('dashboard'), query, { preserveState: true, preserveScroll: true, replace: true })
+    const query = Object.fromEntries(
+        Object.entries(state).filter(([, v]) => v !== '')
+    )
+    router.get(route('dashboard'), query, { 
+        preserveState: true, 
+        preserveScroll: true, 
+        replace: true 
+    })
 }
 
 let timer
 watch(() => state.search, () => {
     clearTimeout(timer)
-    timer = setTimeout(apply, 300) // debounce
+    timer = setTimeout(apply, 300)
 })
+
 watch(() => [state.platform, state.sort], apply)
 
-const toggleSort = () => (state.sort = state.sort === 'asc' ? 'desc' : 'asc')
+const toggleSort = () => {
+    state.sort = state.sort === 'asc' ? 'desc' : 'asc'
+}
 </script>
 
 <template>
-    <form role="search" @submit.prevent="apply">
-        <input
+    <form role="search" class="flex flex-wrap items-center gap-2" @submit.prevent="apply">
+        <Input
             v-model="state.search"
             type="search"
             placeholder="Cari nama / email"
             aria-label="Cari agent"
             data-testid="agent-search"
+            class="w-full sm:w-64"
         />
-
-        <select v-model="state.platform" aria-label="Filter platform" data-testid="agent-filter-platform">
+        <select
+            v-model="state.platform"
+            aria-label="Filter platform"
+            data-testid="agent-filter-platform"
+            class="rounded-md border border-neutral-300 py-2 text-sm"
+        >
             <option value="">Semua platform</option>
-            <option v-for="p in platforms" :key="p.id" :value="p.id">{{ p.name }}</option>
+            <option v-for="p in platforms" :key="p.id" :value="p.id">
+                {{ p.name }}
+            </option>
         </select>
-
-        <button type="button" aria-label="Urutkan nama" data-testid="agent-sort" @click="toggleSort">
+        <Button 
+            type="button" 
+            variant="outline" 
+            aria-label="Urutkan nama" 
+            data-testid="agent-sort" 
+            @click="toggleSort"
+        >
+            <component :is="state.sort === 'asc' ? ArrowDownAZ : ArrowUpAZ" class="size-4" />
             {{ state.sort === 'asc' ? 'A-Z' : 'Z-A' }}
-        </button>
-
-        <button v-if="canManage" type="button" aria-label="Tambah agent" data-testid="agent-add" @click="emit('add')">
-            + add
-        </button>
+        </Button>
+        <Button
+            v-if="canManage"
+            type="button"
+            aria-label="Tambah agent"
+            data-testid="agent-add"
+            class="ml-auto sm:ml-0"
+            @click="emit('add')"
+        >
+            <Plus class="size-4" />
+            add
+        </Button>
     </form>
 </template>

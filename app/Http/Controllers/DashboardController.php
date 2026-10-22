@@ -17,7 +17,7 @@ class DashboardController extends Controller
         // query GET sederhana, cukup validate inline
         $filters = $request->validate([
             'search'   => ['nullable', 'string', 'max:100'],
-            'platform' => ['nullable', 'integer', 'exists:platforms,id'],
+            'platform' => ['nullable', 'numeric', 'exists:platforms,id'], // <-- Ganti 'integer' jadi 'numeric' cuy
             'sort'     => ['nullable', 'in:asc,desc'],
         ]);
 
