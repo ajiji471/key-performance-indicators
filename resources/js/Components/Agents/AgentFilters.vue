@@ -7,16 +7,14 @@ import { Input } from '@/Components/ui/input'
 
 const props = defineProps({
     filters:   { type: Object, default: () => ({}) },
-    platforms: { type: Array, required: true },
     canManage: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['add'])
 
 const state = reactive({
-    search:   props.filters.search ?? '',
-    platform: props.filters.platform ?? '',
-    sort:     props.filters.sort ?? 'asc',
+    search: props.filters.search ?? '',
+    sort:   props.filters.sort ?? 'asc',
 })
 
 const apply = () => {
@@ -33,10 +31,11 @@ const apply = () => {
 let timer
 watch(() => state.search, () => {
     clearTimeout(timer)
-    timer = setTimeout(apply, 300)
+    timer = setTimeout(apply, 300) // debounce search
 })
 
-watch(() => [state.platform, state.sort], apply)
+// Watch cuma buat sort
+watch(() => state.sort, apply)
 
 const toggleSort = () => {
     state.sort = state.sort === 'asc' ? 'desc' : 'asc'
@@ -48,22 +47,13 @@ const toggleSort = () => {
         <Input
             v-model="state.search"
             type="search"
-            placeholder="Cari nama / email"
+            placeholder="Search name / email"
             aria-label="Cari agent"
             data-testid="agent-search"
             class="w-full sm:w-64"
         />
-        <select
-            v-model="state.platform"
-            aria-label="Filter platform"
-            data-testid="agent-filter-platform"
-            class="rounded-md border border-neutral-300 py-2 text-sm"
-        >
-            <option value="">Semua platform</option>
-            <option v-for="p in platforms" :key="p.id" :value="p.id">
-                {{ p.name }}
-            </option>
-        </select>
+        
+        <!-- Tombol Sort -->
         <Button 
             type="button" 
             variant="outline" 
@@ -74,6 +64,8 @@ const toggleSort = () => {
             <component :is="state.sort === 'asc' ? ArrowDownAZ : ArrowUpAZ" class="size-4" />
             {{ state.sort === 'asc' ? 'A-Z' : 'Z-A' }}
         </Button>
+        
+        <!-- Tombol Add -->
         <Button
             v-if="canManage"
             type="button"

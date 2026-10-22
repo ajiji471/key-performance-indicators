@@ -16,7 +16,6 @@ class DashboardController extends Controller
     {
         $filters = $request->validate([
             'search'   => ['nullable', 'string', 'max:100'],
-            'platform' => ['nullable', 'numeric', 'exists:platforms,id'],
             'sort'     => ['nullable', 'in:asc,desc'],
         ]);
 

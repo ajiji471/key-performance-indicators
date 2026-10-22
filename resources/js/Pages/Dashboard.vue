@@ -52,7 +52,7 @@ const profileId = ref(null)
 
             <!-- Section Tabel -->
             <section aria-label="Daftar agent" class="flex flex-col gap-3 rounded-lg border bg-white p-4">
-                <AgentFilters :filters="filters" :platforms="platforms" :can-manage="canManage" @add="addOpen = true" />
+                <AgentFilters :filters="filters" :can-manage="canManage" @add="addOpen = true" />
                 <AgentTable :agents="agents.data" :platforms="platforms" :can-manage="canManage" @open="profileId = $event" />
                 <Pagination :meta="agents" />
             </section>
