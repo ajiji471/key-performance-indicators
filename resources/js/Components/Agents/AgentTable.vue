@@ -2,7 +2,7 @@
 import { CheckCircle, Clock, XCircle, Eye, Pencil, MoreVertical } from '@lucide/vue'
 import CopyButton from '@/Components/Common/CopyButton.vue'
 
-// Objek data
+// Objek data di atas
 const statusConfig = {
     logged_in:  { label: 'Logged in',  color: 'bg-green-50 text-green-700 border-green-200', icon: CheckCircle },
     registered: { label: 'Registered', color: 'bg-yellow-50 text-yellow-700 border-yellow-200', icon: Clock },
@@ -22,12 +22,19 @@ const getAgentPlatform = (agent, slug) => {
     return agent.platforms?.find((p) => p.slug === slug) || null
 }
 
-// Helper: hitung persentase logged_in
+// Helper: hitung persentase logged_in 
 const getStatusPercentage = (agent) => {
-    if (!agent.platforms || agent.platforms.length === 0) return 0
-    const total = agent.platforms.length
-    const loggedIn = agent.platforms.filter((p) => p.status === 'logged_in').length
-    return Math.round((loggedIn / total) * 100)
+    // Gunakan TOTAL semua platform dari props, bukan agent.platforms
+    const allPlatforms = props.platforms
+    if (!allPlatforms || allPlatforms.length === 0) return 0
+
+    // Hitung berapa banyak platform yg statusnya 'logged_in' untuk agent ini
+    const loggedInCount = allPlatforms.filter((p) => {
+        const agentPlatform = getAgentPlatform(agent, p.slug)
+        return agentPlatform?.status === 'logged_in'
+    }).length
+
+    return Math.round((loggedInCount / allPlatforms.length) * 100)
 }
 
 // Helper: warna persentase
