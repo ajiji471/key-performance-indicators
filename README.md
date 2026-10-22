@@ -7,6 +7,10 @@ for template
 # Update npm
     npm install
 
+or
+
+    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+
 # Copy Paste Rename & Edit .env
 
     DB_CONNECTION=sqlite
