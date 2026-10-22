@@ -2,25 +2,20 @@
 import { computed, ref } from 'vue'
 import { Head, usePage } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import ChartDonut from '@/Components/Common/ChartDonut.vue'
+import ChartBar from '@/Components/Common/ChartBar.vue'
 import Pagination from '@/Components/Common/Pagination.vue'
 import AgentFilters from '@/Components/Agents/AgentFilters.vue'
 import AgentTable from '@/Components/Agents/AgentTable.vue'
 
-// Objek data di atas (jangan dicampur style)
+
+// objek data di atas
 const chartCards = [
-    { key: 'today', title: 'Hari ini' },
-    { key: 'month', title: 'Bulan ini' },
-    { key: 'all',   title: 'Semua' },
+    { key: 'today', title: 'Today' },
+    { key: 'month', title: 'Month' },
+    { key: 'all',   title: 'All' },
 ]
 
-const statuses = [
-    { key: 'logged_in',  label: 'Logged in',  color: '#22c55e' },
-    { key: 'registered', label: 'Registered', color: '#3b82f6' },
-]
 const manageRoles = ['admin', 'user']
-const labels = statuses.map((s) => s.label)
-const colors = statuses.map((s) => s.color)
 
 const props = defineProps({
     stats:     { type: Object, required: true },
@@ -33,8 +28,6 @@ const page = usePage()
 const canManage = computed(() => manageRoles.includes(page.props.auth.user.role))
 const addOpen = ref(false)
 const profileId = ref(null)
-
-const chartValues = (key) => statuses.map((s) => props.stats[key][s.key])
 </script>
 
 <template>
@@ -45,36 +38,25 @@ const chartValues = (key) => statuses.map((s) => props.stats[key][s.key])
             <h1 class="text-base font-semibold text-neutral-900">Dashboard</h1>
         </template>
 
-        <div class="mx-auto flex max-w-7xl flex-col gap-6 p-4">
-            <!-- Section Chart -->
-            <section aria-label="Statistik agent" class="grid gap-4 md:grid-cols-3">
+        <div class="mx-auto flex max-w-7xl flex-col gap-6">
+            <!-- Section Chart (Stacked Bar) -->
+            <section aria-label="Statistik agent per platform" class="grid gap-4 md:grid-cols-3">
                 <div v-for="c in chartCards" :key="c.key" class="rounded-lg border bg-white p-4">
-                    <ChartDonut
+                    <ChartBar
                         :name="c.key"
                         :title="c.title"
-                        :labels="labels"
-                        :values="chartValues(c.key)"
-                        :colors="colors"
+                        :platforms="props.stats[c.key]"
                     />
                 </div>
             </section>
 
-            <!-- Section Tabel dengan wrapper atomic CSS -->
+            <!-- Section Tabel -->
             <section aria-label="Daftar agent" class="flex flex-col gap-3 rounded-lg border bg-white p-4">
-                <AgentFilters 
-                    :filters="filters" 
-                    :platforms="platforms" 
-                    :can-manage="canManage" 
-                    @add="addOpen = true" 
-                />
-                <AgentTable 
-                    :agents="agents.data" 
-                    :platforms="platforms" 
-                    :can-manage="canManage" 
-                    @open="profileId = $event" 
-                />
+                <AgentFilters :filters="filters" :platforms="platforms" :can-manage="canManage" @add="addOpen = true" />
+                <AgentTable :agents="agents.data" :platforms="platforms" :can-manage="canManage" @open="profileId = $event" />
                 <Pagination :meta="agents" />
             </section>
         </div>
+
     </AuthenticatedLayout>
 </template>

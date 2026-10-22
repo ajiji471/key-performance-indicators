@@ -21,7 +21,7 @@ class DashboardController extends Controller
         ]);
 
         $agents = Agent::query()
-            ->with('accounts.platform')
+            ->with(['accounts.platform', 'tasks'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -38,27 +38,22 @@ class DashboardController extends Controller
                 'id'          => $agent->id,
                 'name'        => $agent->name,
                 'device_user' => $agent->device_user,
-                // Kirim array platforms dgn status tunggal per platform
                 'platforms'   => $agent->accounts->map(function ($account) use ($agent) {
-                    $latestTask = $agent->tasks()
-                        ->where('platform_id', $account->platform_id)
-                        ->latest('task_date')
-                        ->first();
-                    
+                    $latestTask = $agent->tasks->firstWhere('platform_id', $account->platform_id);
                     return [
                         'slug'       => $account->platform->slug,
                         'name'       => $account->platform->name,
                         'identifier' => $account->identifier,
-                        'status'     => $latestTask ? $latestTask->status->value : 'registered', // Default registered kalo blm ada task
+                        'status'     => $latestTask ? $latestTask->status->value : 'registered',
                     ];
                 })->values(),
             ]);
 
         return Inertia::render('Dashboard', [
             'stats' => [
-                'today' => $this->countByStatus(today(), today()),
-                'month' => $this->countByStatus(today()->startOfMonth(), today()->endOfMonth()),
-                'all'   => $this->countByStatus(),
+                'today' => $this->countByPlatformAndStatus(today(), today()),
+                'month' => $this->countByPlatformAndStatus(today()->startOfMonth(), today()->endOfMonth()),
+                'all'   => $this->countByPlatformAndStatus(),
             ],
             'agents'    => $agents,
             'platforms' => Platform::orderBy('sort')->get(['id', 'slug', 'name']),
@@ -66,18 +61,29 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function countByStatus(?CarbonInterface $from = null, ?CarbonInterface $to = null): array
+    // Hitung jumlah agent per platform per status
+    private function countByPlatformAndStatus(?CarbonInterface $from = null, ?CarbonInterface $to = null): array
     {
-        $rows = Task::query()
-            ->when($from, fn ($q) => $q->whereBetween('task_date', [$from->toDateString(), $to->toDateString()]))
-            ->selectRaw('status, COUNT(DISTINCT agent_id) AS total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
-
-        return [
-            'registered' => (int) ($rows['registered'] ?? 0),
-            'logged_in'  => (int) ($rows['logged_in'] ?? 0),
-            'trouble'    => (int) ($rows['trouble'] ?? 0),
-        ];
+        $platforms = Platform::orderBy('sort')->get();
+        
+        $query = Task::query()
+            ->when($from, fn ($q) => $q->whereBetween('task_date', [$from->toDateString(), $to->toDateString()]));
+        
+        // Group by platform dan status
+        $stats = $query
+            ->selectRaw('platform_id, status, COUNT(DISTINCT agent_id) as total')
+            ->groupBy('platform_id', 'status')
+            ->get()
+            ->groupBy('platform_id');
+        
+        return $platforms->map(function ($platform) use ($stats) {
+            $platformStats = $stats[$platform->id] ?? collect([]);
+            return [
+                'name'       => $platform->name,
+                'logged_in'  => (int) ($platformStats->where('status', 'logged_in')->first()->total ?? 0),
+                'registered' => (int) ($platformStats->where('status', 'registered')->first()->total ?? 0),
+                'trouble'    => (int) ($platformStats->where('status', 'trouble')->first()->total ?? 0),
+            ];
+        })->values()->toArray();
     }
 }
