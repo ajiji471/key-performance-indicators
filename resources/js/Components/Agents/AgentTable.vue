@@ -1,12 +1,12 @@
 <script setup>
-import { Check, Clock, X, Eye, Pencil, MoreVertical } from '@lucide/vue'
+import { CheckCircle, Clock, XCircle, Eye, Pencil, MoreVertical } from '@lucide/vue'
 import CopyButton from '@/Components/Common/CopyButton.vue'
 
-// Objek data di atas (jgn dicampur style)
+// Objek data
 const statusConfig = {
-    logged_in:  { label: 'Logged in',  color: 'bg-green-50 text-green-700 border-green-200', icon: Check },
+    logged_in:  { label: 'Logged in',  color: 'bg-green-50 text-green-700 border-green-200', icon: CheckCircle },
     registered: { label: 'Registered', color: 'bg-yellow-50 text-yellow-700 border-yellow-200', icon: Clock },
-    trouble:    { label: 'Trouble',    color: 'bg-red-50 text-red-700 border-red-200', icon: X },
+    trouble:    { label: 'Trouble',    color: 'bg-red-50 text-red-700 border-red-200', icon: XCircle },
 }
 
 const props = defineProps({
@@ -60,18 +60,18 @@ const getPercentageColor = (percentage) => {
                     <!-- Name Column -->
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-3">
-                            <div class="size-10 shrink-0 rounded-full bg-neutral-200">
-                                <!-- Placeholder avatar, nanti diganti img v-if ada avatar_path -->
+                            <div class="size-10 shrink-0 rounded-full bg-neutral-200 flex items-center justify-center text-neutral-600 font-bold">
+                                {{ agent.name.charAt(0).toUpperCase() }}
                             </div>
                             <div>
                                 <div class="font-medium text-neutral-900">{{ agent.name }}</div>
-                                <div class="text-xs text-neutral-500">Device : {{ agent.device_user }}</div>
-                                <div class="text-xs text-neutral-400">created at: {{ agent.created_at }}</div>
+                                <div class="text-xs text-neutral-500">Device : {{ agent.device_user || '-' }}</div>
+                                <div class="text-xs text-neutral-400">created at: {{ agent.created_at ? new Date(agent.created_at).toLocaleDateString('id-ID') : '-' }}</div>
                             </div>
                         </div>
                     </td>
 
-                    <!-- Success Rate Column -->
+                    <!-- Complete Rate Column -->
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-1.5">
                             <span class="size-1.5 rounded-full" :class="getPercentageColor(getStatusPercentage(agent)).replace('text-', 'bg-')" />
@@ -81,36 +81,36 @@ const getPercentageColor = (percentage) => {
                         </div>
                     </td>
 
-                   
-
-                    <!-- Platforms Column (Tags dengan icon status) -->
+                    <!-- Platforms Column -->
                     <td class="px-4 py-3">
                         <div class="flex flex-wrap items-center gap-1.5">
                             <div
                                 v-for="p in platforms"
                                 :key="p.id"
-                                class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs"
+                                class="group inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs"
                                 :class="getAgentPlatform(agent, p.slug)?.status 
                                     ? statusConfig[getAgentPlatform(agent, p.slug).status]?.color 
                                     : 'bg-neutral-50 text-neutral-500 border-neutral-200'"
                             >
-                                <!-- Platform icon placeholder (bisa diganti icon asli per platform) -->
                                 <span class="font-medium">{{ p.name }}</span>
                                 
-                                <!-- Status icon -->
                                 <component 
                                     v-if="getAgentPlatform(agent, p.slug)?.status"
                                     :is="statusConfig[getAgentPlatform(agent, p.slug).status]?.icon" 
-                                    class="size-3" 
+                                    class="size-3.5 shrink-0" 
                                 />
                                 
-                                <!-- Copy button (hidden by default, show on hover) -->
+                                <span 
+                                    v-if="getAgentPlatform(agent, p.slug)?.identifier" 
+                                    class="text-neutral-300 px-0.5"
+                                >|</span>
+                                
                                 <CopyButton
                                     v-if="getAgentPlatform(agent, p.slug)?.identifier"
                                     :value="getAgentPlatform(agent, p.slug).identifier"
                                     :label="`${p.name} ${agent.name}`"
                                     :test-id="`${p.slug}-${agent.id}`"
-                                    class="opacity-0 group-hover:opacity-100"
+                                    class="shrink-0 size-2"
                                 />
                             </div>
                         </div>
@@ -132,7 +132,7 @@ const getPercentageColor = (percentage) => {
 
                 <!-- Empty State -->
                 <tr v-if="!agents.length">
-                    <td colspan="5" class="py-12 text-center text-neutral-400">
+                    <td colspan="4" class="py-12 text-center text-neutral-400">
                         Belum ada agent
                     </td>
                 </tr>
