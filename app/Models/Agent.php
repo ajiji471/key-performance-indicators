@@ -22,7 +22,7 @@ class Agent extends Model
     protected function casts(): array
     {
         return [
-            'password'           => 'encrypted', // pakai APP_KEY, jgn diganti cuy
+            'password'           => 'encrypted', 
             'birth_date'         => 'date:Y-m-d',
             'device_released_at' => 'date:Y-m-d',
             'latitude'           => 'decimal:7',
@@ -38,5 +38,10 @@ class Agent extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
     }
 }

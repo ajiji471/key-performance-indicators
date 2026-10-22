@@ -14,15 +14,14 @@ class DashboardController extends Controller
 {
     public function __invoke(Request $request): Response
     {
-        // query GET sederhana, cukup validate inline
         $filters = $request->validate([
             'search'   => ['nullable', 'string', 'max:100'],
-            'platform' => ['nullable', 'numeric', 'exists:platforms,id'], // <-- Ganti 'integer' jadi 'numeric' cuy
+            'platform' => ['nullable', 'numeric', 'exists:platforms,id'],
             'sort'     => ['nullable', 'in:asc,desc'],
         ]);
 
         $agents = Agent::query()
-            ->with('accounts.platform') // hindari N+1
+            ->with('accounts.platform')
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -39,10 +38,20 @@ class DashboardController extends Controller
                 'id'          => $agent->id,
                 'name'        => $agent->name,
                 'device_user' => $agent->device_user,
-                // slug platform => identifier. Password TIDAK ikut cuy
-                'accounts'    => $agent->accounts->mapWithKeys(
-                    fn ($account) => [$account->platform->slug => $account->identifier]
-                ),
+                // Kirim array platforms dgn status tunggal per platform
+                'platforms'   => $agent->accounts->map(function ($account) use ($agent) {
+                    $latestTask = $agent->tasks()
+                        ->where('platform_id', $account->platform_id)
+                        ->latest('task_date')
+                        ->first();
+                    
+                    return [
+                        'slug'       => $account->platform->slug,
+                        'name'       => $account->platform->name,
+                        'identifier' => $account->identifier,
+                        'status'     => $latestTask ? $latestTask->status->value : 'registered', // Default registered kalo blm ada task
+                    ];
+                })->values(),
             ]);
 
         return Inertia::render('Dashboard', [
@@ -57,7 +66,6 @@ class DashboardController extends Controller
         ]);
     }
 
-    // jml agent unik per status dlm rentang tanggal (null = semua)
     private function countByStatus(?CarbonInterface $from = null, ?CarbonInterface $to = null): array
     {
         $rows = Task::query()
@@ -69,6 +77,7 @@ class DashboardController extends Controller
         return [
             'registered' => (int) ($rows['registered'] ?? 0),
             'logged_in'  => (int) ($rows['logged_in'] ?? 0),
+            'trouble'    => (int) ($rows['trouble'] ?? 0),
         ];
     }
 }
