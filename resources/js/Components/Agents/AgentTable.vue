@@ -1,31 +1,36 @@
 <script setup>
-import { computed } from 'vue'
-import { Eye, Pencil } from '@lucide/vue'
+import { Check, Clock, X, Eye, Pencil, MoreVertical } from '@lucide/vue'
 import CopyButton from '@/Components/Common/CopyButton.vue'
+
+// Objek data di atas (jgn dicampur style)
+const statusConfig = {
+    logged_in:  { label: 'Logged in',  color: 'bg-green-50 text-green-700 border-green-200', icon: Check },
+    registered: { label: 'Registered', color: 'bg-yellow-50 text-yellow-700 border-yellow-200', icon: Clock },
+    trouble:    { label: 'Trouble',    color: 'bg-red-50 text-red-700 border-red-200', icon: X },
+}
 
 const props = defineProps({
     agents:    { type: Array, required: true },
+    platforms: { type: Array, required: true },
     canManage: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['open'])
 
-// Objek data di atas (jgn dicampur style)
-const statusConfig = {
-    logged_in:  { label: 'Logged in',  color: 'bg-green-100 text-green-700 border-green-200' },
-    registered: { label: 'Registered', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-    trouble:    { label: 'Trouble',    color: 'bg-red-100 text-red-700 border-red-200' },
+// Helper: cari data platform spesifik milik agent
+const getAgentPlatform = (agent, slug) => {
+    return agent.platforms?.find((p) => p.slug === slug) || null
 }
 
-// Hitung persentase logged_in per agent
+// Helper: hitung persentase logged_in
 const getStatusPercentage = (agent) => {
     if (!agent.platforms || agent.platforms.length === 0) return 0
-    const totalPlatforms = agent.platforms.length
-    const loggedInCount = agent.platforms.filter(p => p.status === 'logged_in').length
-    return Math.round((loggedInCount / totalPlatforms) * 100)
+    const total = agent.platforms.length
+    const loggedIn = agent.platforms.filter((p) => p.status === 'logged_in').length
+    return Math.round((loggedIn / total) * 100)
 }
 
-// Warna persentase berdasarkan nilai
+// Helper: warna persentase
 const getPercentageColor = (percentage) => {
     if (percentage === 100) return 'text-green-600'
     if (percentage >= 50) return 'text-yellow-600'
@@ -35,92 +40,103 @@ const getPercentageColor = (percentage) => {
 </script>
 
 <template>
-    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <div
-            v-for="agent in agents"
-            :key="agent.id"
-            :data-testid="`agent-card-${agent.id}`"
-            class="flex flex-col rounded-lg border bg-white"
-        >
-            <!-- Header Card: Name | Edit Button -->
-            <div class="flex items-center justify-between border-b bg-neutral-50 px-3 py-2">
-                <div class="min-w-0 flex-1">
-                    <div class="truncate text-sm font-semibold text-neutral-900" :title="agent.name">
-                        {{ agent.name }}
-                    </div>
-                </div>
-                <button
-                    type="button"
-                    :aria-label="`${canManage ? 'Edit' : 'Lihat'} profile ${agent.name}`"
-                    :data-testid="`agent-open-${agent.id}`"
-                    class="shrink-0 rounded p-1.5 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-900"
-                    @click="emit('open', agent.id)"
+    <div class="overflow-x-auto rounded-lg border bg-white">
+        <table class="w-full whitespace-nowrap text-left">
+            <thead class="border-b bg-neutral-50 text-xs uppercase text-neutral-500">
+                <tr>
+                    <th class="px-4 py-3 font-medium">Name</th>
+                    <th class="px-4 py-3 font-medium">Complete</th>
+                    <th class="px-4 py-3 font-medium">Platforms</th>
+                    <th class="px-4 py-3 font-medium text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                <tr 
+                    v-for="agent in agents" 
+                    :key="agent.id" 
+                    :data-testid="`agent-row-${agent.id}`" 
+                    class="hover:bg-neutral-50"
                 >
-                    <component :is="canManage ? Pencil : Eye" class="size-4" />
-                </button>
-            </div>
-
-            <!-- Body Card -->
-            <div class="flex flex-1 flex-col gap-3 p-3">
-                <!-- Blok Device -->
-                <div class="grid grid-cols-3 gap-2 rounded-md border bg-neutral-50 px-2 py-1.5 text-sm">
-                    <div>
-                        <div class="text-xs text-neutral-500">Name</div>
-                        <div class="truncate font-medium text-neutral-900" :title="agent.name">{{ agent.name }}</div>
-                    </div>
-                    <div>
-                        <div class="text-xs text-neutral-500">Device</div>
-                        <div class="truncate font-medium text-neutral-900" :title="agent.device_user">{{ agent.device_user || '-' }}</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-xs text-neutral-500">Status</div>
-                        <div 
-                            class="font-semibold"
-                            :class="getPercentageColor(getStatusPercentage(agent))"
-                        >
-                            {{ getStatusPercentage(agent) }}%
+                    <!-- Name Column -->
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            <div class="size-10 shrink-0 rounded-full bg-neutral-200">
+                                <!-- Placeholder avatar, nanti diganti img v-if ada avatar_path -->
+                            </div>
+                            <div>
+                                <div class="font-medium text-neutral-900">{{ agent.name }}</div>
+                                <div class="text-xs text-neutral-500">Device : {{ agent.device_user }}</div>
+                                <div class="text-xs text-neutral-400">created at: {{ agent.created_at }}</div>
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    </td>
 
-                <!-- Blok Platform (TANPA CHART, cuma badge status tunggal) -->
-                <div class="grid gap-2">
-                    <div
-                        v-for="p in agent.platforms"
-                        :key="p.slug"
-                        class="flex items-center justify-between rounded-md border px-2 py-1.5"
-                    >
-                        <div class="min-w-0 flex-1">
-                            <div class="text-xs font-semibold text-neutral-700">{{ p.name }}</div>
-                            <div v-if="p.identifier" class="flex items-center gap-1">
-                                <span class="truncate text-sm text-neutral-900" :title="p.identifier">
-                                    {{ p.identifier }}
-                                </span>
+                    <!-- Success Rate Column -->
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-1.5">
+                            <span class="size-1.5 rounded-full" :class="getPercentageColor(getStatusPercentage(agent)).replace('text-', 'bg-')" />
+                            <span class="font-mono text-sm font-medium" :class="getPercentageColor(getStatusPercentage(agent))">
+                                {{ getStatusPercentage(agent) }}%
+                            </span>
+                        </div>
+                    </td>
+
+                   
+
+                    <!-- Platforms Column (Tags dengan icon status) -->
+                    <td class="px-4 py-3">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <div
+                                v-for="p in platforms"
+                                :key="p.id"
+                                class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs"
+                                :class="getAgentPlatform(agent, p.slug)?.status 
+                                    ? statusConfig[getAgentPlatform(agent, p.slug).status]?.color 
+                                    : 'bg-neutral-50 text-neutral-500 border-neutral-200'"
+                            >
+                                <!-- Platform icon placeholder (bisa diganti icon asli per platform) -->
+                                <span class="font-medium">{{ p.name }}</span>
+                                
+                                <!-- Status icon -->
+                                <component 
+                                    v-if="getAgentPlatform(agent, p.slug)?.status"
+                                    :is="statusConfig[getAgentPlatform(agent, p.slug).status]?.icon" 
+                                    class="size-3" 
+                                />
+                                
+                                <!-- Copy button (hidden by default, show on hover) -->
                                 <CopyButton
-                                    :value="p.identifier"
+                                    v-if="getAgentPlatform(agent, p.slug)?.identifier"
+                                    :value="getAgentPlatform(agent, p.slug).identifier"
                                     :label="`${p.name} ${agent.name}`"
                                     :test-id="`${p.slug}-${agent.id}`"
+                                    class="opacity-0 group-hover:opacity-100"
                                 />
                             </div>
-                            <div v-else class="text-sm text-neutral-400">-</div>
                         </div>
-                        
-                        <!-- Badge Status Tunggal -->
-                        <span 
-                            v-if="p.status"
-                            :class="statusConfig[p.status]?.color || 'bg-neutral-100 text-neutral-700 border-neutral-200'"
-                            class="shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium"
-                        >
-                            {{ statusConfig[p.status]?.label || p.status }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    </td>
 
-        <!-- Empty State -->
-        <div v-if="!agents.length" class="col-span-full py-12 text-center text-neutral-400">
-            Belum ada agent
-        </div>
+                    <!-- Actions Column -->
+                    <td class="px-4 py-3 text-right">
+                        <button
+                            type="button"
+                            :aria-label="`${canManage ? 'Edit' : 'Lihat'} profile ${agent.name}`"
+                            :data-testid="`agent-open-${agent.id}`"
+                            class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                            @click="emit('open', agent.id)"
+                        >
+                            <MoreVertical class="size-4" />
+                        </button>
+                    </td>
+                </tr>
+
+                <!-- Empty State -->
+                <tr v-if="!agents.length">
+                    <td colspan="5" class="py-12 text-center text-neutral-400">
+                        Belum ada agent
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </template>
