@@ -6,6 +6,7 @@ import ChartBar from '@/Components/Common/ChartBar.vue'
 import Pagination from '@/Components/Common/Pagination.vue'
 import AgentFilters from '@/Components/Agents/AgentFilters.vue'
 import AgentTable from '@/Components/Agents/AgentTable.vue'
+import AgentFormCard from '@/Components/Agents/AgentFormCard.vue'
 
 
 // objek data di atas
@@ -57,6 +58,8 @@ const profileId = ref(null)
                 <Pagination :meta="agents" />
             </section>
         </div>
+
+        <AgentFormCard v-model:open="addOpen" />
 
     </AuthenticatedLayout>
 </template>
