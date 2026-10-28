@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AccountStatus;
 use App\Models\Agent;
+use App\Models\AgentAccount;
 use App\Models\Platform;
 use App\Models\Task;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -38,6 +41,7 @@ class DashboardController extends Controller
                 'name'        => $agent->name,
                 'avatar_url'  => $agent->avatarUrl(),
                 'device_user' => $agent->device_user,
+                'created_at'  => $agent->created_at?->toDateString(),
                 'platforms'   => $agent->accounts->map(fn ($account) => [
                     'slug'       => $account->platform->slug,
                     'name'       => $account->platform->name,
@@ -48,7 +52,8 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard', [
             'stats' => [
-                'today' => $this->countByPlatformAndStatus(today(), today()),
+                // Today = snapshot status akun, sama dengan tabel
+                'today' => $this->countAccountsByPlatformAndStatus(),
                 'month' => $this->countByPlatformAndStatus(today()->startOfMonth(), today()->endOfMonth()),
                 'all'   => $this->countByPlatformAndStatus(),
             ],
@@ -58,29 +63,42 @@ class DashboardController extends Controller
         ]);
     }
 
-    // Hitung jumlah agent per platform per status
+    // Hitung jumlah agent per platform per status dari task (month/all)
     private function countByPlatformAndStatus(?CarbonInterface $from = null, ?CarbonInterface $to = null): array
     {
-        $platforms = Platform::orderBy('sort')->get();
-        
-        $query = Task::query()
-            ->when($from, fn ($q) => $q->whereBetween('task_date', [$from->toDateString(), $to->toDateString()]));
-        
-        // Group by platform dan status
-        $stats = $query
+        $stats = Task::query()
+            ->when($from, fn ($q) => $q->whereBetween('task_date', [$from->toDateString(), $to->toDateString()]))
             ->selectRaw('platform_id, status, COUNT(DISTINCT agent_id) as total')
             ->groupBy('platform_id', 'status')
             ->get()
             ->groupBy('platform_id');
-        
-        return $platforms->map(function ($platform) use ($stats) {
-            $platformStats = $stats[$platform->id] ?? collect([]);
-            return [
-                'name'       => $platform->name,
-                'logged_in'  => (int) ($platformStats->where('status', 'logged_in')->first()->total ?? 0),
-                'registered' => (int) ($platformStats->where('status', 'registered')->first()->total ?? 0),
-                'trouble'    => (int) ($platformStats->where('status', 'trouble')->first()->total ?? 0),
-            ];
+
+        return $this->platformStatusTotals($stats);
+    }
+
+    // Hitung jumlah agent per platform per status dari akun (today)
+    private function countAccountsByPlatformAndStatus(): array
+    {
+        $stats = AgentAccount::query()
+            ->selectRaw('platform_id, status, COUNT(DISTINCT agent_id) as total')
+            ->groupBy('platform_id', 'status')
+            ->get()
+            ->groupBy('platform_id');
+
+        return $this->platformStatusTotals($stats);
+    }
+
+    private function platformStatusTotals(Collection $stats): array
+    {
+        return Platform::orderBy('sort')->get()->map(function ($platform) use ($stats) {
+            $platformStats = $stats[$platform->id] ?? collect();
+
+            $totals = ['name' => $platform->name];
+            foreach (AccountStatus::cases() as $status) {
+                $totals[$status->value] = (int) ($platformStats->where('status', $status->value)->first()->total ?? 0);
+            }
+
+            return $totals;
         })->values()->toArray();
     }
 }

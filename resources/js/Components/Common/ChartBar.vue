@@ -28,6 +28,12 @@ const data = computed(() => ({
             stack: 'Stack 0',
         },
         {
+            label: 'Recovered',
+            data: props.platforms.map((p) => p.recovered ?? 0),
+            backgroundColor: '#3b82f6',
+            stack: 'Stack 0',
+        },
+        {
             label: 'Trouble',
             data: props.platforms.map((p) => p.trouble),
             backgroundColor: '#ef4444',
@@ -56,7 +62,7 @@ const options = {
     },
 }
 
-const empty = computed(() => props.platforms.every((p) => p.logged_in === 0 && p.registered === 0 && p.trouble === 0))
+const empty = computed(() => props.platforms.every((p) => p.logged_in === 0 && p.registered === 0 && p.recovered === 0 && p.trouble === 0))
 </script>
 
 <template>

@@ -32,6 +32,14 @@ class DashboardTest extends TestCase
             );
     }
 
+    public function test_flash_sukses_dibagikan_ke_dashboard(): void
+    {
+        $this->login(Role::Admin)
+            ->withSession(['success' => 'Agent added.'])
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page->where('flash.success', 'Agent added.'));
+    }
+
     public function test_semua_role_bisa_buka_dashboard(): void
     {
         foreach (Role::cases() as $role) {
@@ -42,12 +50,25 @@ class DashboardTest extends TestCase
         }
     }
 
-    public function test_stats_hitung_distinct_agent_per_status(): void
+    public function test_chart_today_ikut_status_akun_dan_chart_bulan_dari_task(): void
     {
         $platform = Platform::factory()->create();
-        $agent = Agent::factory()->create();
 
-        // agent sama 2x registered hari ini = tetap 1
+        $agent = Agent::factory()->create();
+        $agent->accounts()->create([
+            'platform_id' => $platform->id,
+            'identifier'  => 'agent@example.com',
+            'status'      => AccountStatus::LoggedIn,
+        ]);
+
+        $recovered = Agent::factory()->create();
+        $recovered->accounts()->create([
+            'platform_id' => $platform->id,
+            'identifier'  => 'recovered@example.com',
+            'status'      => AccountStatus::Recovered,
+        ]);
+
+        // task hari ini registered: dipakai month/all, bukan today
         Task::factory()->count(2)->create([
             'agent_id'    => $agent->id,
             'platform_id' => $platform->id,
@@ -66,8 +87,10 @@ class DashboardTest extends TestCase
         $this->login(Role::Admin)
             ->get('/dashboard')
             ->assertInertia(fn (Assert $page) => $page
-                ->where('stats.today.0.registered', 1)
-                ->where('stats.today.0.logged_in', 0)
+                ->where('stats.today.0.logged_in', 1)
+                ->where('stats.today.0.recovered', 1)
+                ->where('stats.today.0.registered', 0)
+                ->where('stats.month.0.registered', 1)
                 ->where('stats.month.0.logged_in', 0)
                 ->where('stats.all.0.registered', 1)
                 ->where('stats.all.0.logged_in', 1)
@@ -97,6 +120,7 @@ class DashboardTest extends TestCase
             ->get('/dashboard')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('agents.data.0.platforms.0.status', 'logged_in')
+                ->where('agents.data.0.created_at', $agent->created_at->toDateString())
             );
     }
 

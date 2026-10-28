@@ -90,7 +90,9 @@ class AgentTest extends TestCase
     public function test_admin_dan_user_bisa_tambah_agent(): void
     {
         foreach ([Role::Admin, Role::User] as $role) {
-            $this->login($role)->post('/agents', $this->payload())->assertRedirect();
+            $this->login($role)->post('/agents', $this->payload())
+                ->assertRedirect()
+                ->assertSessionHas('success', 'Agent added.');
 
             $agent = Agent::latest('id')->first();
             $this->assertSame('Budi', $agent->name);

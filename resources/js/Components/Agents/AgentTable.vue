@@ -84,7 +84,7 @@ const getPercentageColor = (percentage) => {
                             <div>
                                 <div class="font-medium text-neutral-900">{{ agent.name }}</div>
                                 <div class="text-xs text-neutral-500">Device : {{ agent.device_user || '-' }}</div>
-                                <div class="text-xs text-neutral-400">created at: {{ agent.created_at ? new Date(agent.created_at).toLocaleDateString('id-ID') : '-' }}</div>
+                                <div class="text-xs text-neutral-400">Created at: {{ agent.created_at ? new Date(agent.created_at + 'T00:00:00').toLocaleDateString('en-GB') : '-' }}</div>
                             </div>
                         </div>
                     </td>

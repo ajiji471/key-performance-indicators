@@ -27,6 +27,7 @@ const props = defineProps({
 
 const page = usePage()
 const canManage = computed(() => manageRoles.includes(page.props.auth.user?.role))
+const flash = computed(() => page.props.flash ?? {})
 const addOpen = ref(false)
 const editingId = ref(null)
 const editOpen = computed(() => editingId.value !== null)
@@ -45,6 +46,21 @@ const closeEdit = (open) => {
         </template>
 
         <div class="mx-auto flex max-w-7xl flex-col gap-6">
+            <p
+                v-if="flash.success"
+                role="status"
+                class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+            >
+                {{ flash.success }}
+            </p>
+            <p
+                v-if="flash.error"
+                role="alert"
+                class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+                {{ flash.error }}
+            </p>
+
             <!-- Section Chart (Stacked Bar) -->
             <section aria-label="Agent statistics per platform" class="grid gap-4 md:grid-cols-3">
                 <div v-for="c in chartCards" :key="c.key" class="rounded-lg border bg-white p-4">
