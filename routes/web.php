@@ -8,10 +8,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
 
+// publik: dashboard read-only, aksi tulis tetap di grup auth di bawah
+Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
 // semua role
 Route::middleware(['auth', 'role:admin,user,auditor'])->group(function () {
-    Route::get('/dashboard', DashboardController::class)->name('dashboard');
-
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     // profile

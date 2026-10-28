@@ -26,7 +26,7 @@ const props = defineProps({
 })
 
 const page = usePage()
-const canManage = computed(() => manageRoles.includes(page.props.auth.user.role))
+const canManage = computed(() => manageRoles.includes(page.props.auth.user?.role))
 const addOpen = ref(false)
 const editingId = ref(null)
 const editOpen = computed(() => editingId.value !== null)

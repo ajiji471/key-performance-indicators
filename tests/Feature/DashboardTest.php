@@ -22,9 +22,14 @@ class DashboardTest extends TestCase
         return $this->actingAs(User::factory()->create(['role' => $role]));
     }
 
-    public function test_guest_diarahkan_ke_login(): void
+    public function test_guest_bisa_melihat_dashboard(): void
     {
-        $this->get('/dashboard')->assertRedirect('/login');
+        $this->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Dashboard')
+                ->where('auth.user', null)
+            );
     }
 
     public function test_semua_role_bisa_buka_dashboard(): void

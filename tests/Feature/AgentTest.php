@@ -47,10 +47,15 @@ class AgentTest extends TestCase
             ->all();
     }
 
-    public function test_guest_diarahkan_ke_login(): void
+    public function test_guest_bisa_lihat_dashboard_tapi_tidak_bisa_ubah_agent(): void
     {
-        $this->get('/dashboard')->assertRedirect('/login');
+        $agent = Agent::factory()->create();
+
+        $this->get('/dashboard')->assertOk();
+
         $this->post('/agents', $this->payload())->assertRedirect('/login');
+        $this->patch("/agents/{$agent->id}", $this->payload())->assertRedirect('/login');
+        $this->delete("/agents/{$agent->id}")->assertRedirect('/login');
     }
 
     public function test_semua_role_bisa_lihat_daftar_agent(): void

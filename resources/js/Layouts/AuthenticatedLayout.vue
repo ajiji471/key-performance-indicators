@@ -43,8 +43,8 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
-                            <!-- Settings Dropdown -->
-                            <div class="relative ms-3">
+                            <!-- Settings Dropdown (guest: login link) -->
+                            <div v-if="$page.props.auth.user" class="relative ms-3">
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
                                         <span class="inline-flex rounded-md">
@@ -86,6 +86,13 @@ const showingNavigationDropdown = ref(false);
                                     </template>
                                 </Dropdown>
                             </div>
+                            <Link
+                                v-else
+                                :href="route('login')"
+                                class="rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition hover:text-gray-900"
+                            >
+                                Log in
+                            </Link>
                         </div>
 
                         <!-- Hamburger -->
@@ -150,6 +157,7 @@ const showingNavigationDropdown = ref(false);
 
                     <!-- Responsive Settings Options -->
                     <div
+                        v-if="$page.props.auth.user"
                         class="border-t border-gray-200 pb-1 pt-4"
                     >
                         <div class="px-4">
@@ -173,6 +181,14 @@ const showingNavigationDropdown = ref(false);
                                 as="button"
                             >
                                 Log Out
+                            </ResponsiveNavLink>
+                        </div>
+                    </div>
+
+                    <div v-else class="border-t border-gray-200 pb-1 pt-4">
+                        <div class="space-y-1">
+                            <ResponsiveNavLink :href="route('login')">
+                                Log in
                             </ResponsiveNavLink>
                         </div>
                     </div>
