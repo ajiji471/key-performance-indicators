@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AccountStatus;
 use App\Enums\Role;
 use App\Enums\TaskStatus;
 use App\Models\Agent;
@@ -65,6 +66,32 @@ class DashboardTest extends TestCase
                 ->where('stats.month.0.logged_in', 0)
                 ->where('stats.all.0.registered', 1)
                 ->where('stats.all.0.logged_in', 1)
+            );
+    }
+
+    public function test_status_platform_di_tabel_ikut_status_akun(): void
+    {
+        $platform = Platform::factory()->create();
+        $agent = Agent::factory()->create();
+
+        $agent->accounts()->create([
+            'platform_id' => $platform->id,
+            'identifier'  => 'rogelio@example.com',
+            'status'      => AccountStatus::LoggedIn,
+        ]);
+
+        // task lama tidak boleh menimpa status akun di tabel
+        Task::factory()->create([
+            'agent_id'    => $agent->id,
+            'platform_id' => $platform->id,
+            'status'      => TaskStatus::Trouble,
+            'task_date'   => today()->toDateString(),
+        ]);
+
+        $this->login(Role::Admin)
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('agents.data.0.platforms.0.status', 'logged_in')
             );
     }
 

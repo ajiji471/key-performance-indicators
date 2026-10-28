@@ -1,11 +1,12 @@
 <script setup>
-import { CheckCircle, Clock, XCircle, Eye, Pencil, MoreVertical } from '@lucide/vue'
+import { CheckCircle, Clock, RefreshCw, XCircle, MoreVertical } from '@lucide/vue'
 import CopyButton from '@/Components/Common/CopyButton.vue'
 
-// Objek data di atas
+// sama persis dengan App\Enums\AccountStatus (dipakai form add/edit agent)
 const statusConfig = {
     logged_in:  { label: 'Logged in',  color: 'bg-green-50 text-green-700 border-green-200', icon: CheckCircle },
     registered: { label: 'Registered', color: 'bg-yellow-50 text-yellow-700 border-yellow-200', icon: Clock },
+    recovered:  { label: 'Recovered',  color: 'bg-blue-50 text-blue-700 border-blue-200', icon: RefreshCw },
     trouble:    { label: 'Trouble',    color: 'bg-red-50 text-red-700 border-red-200', icon: XCircle },
 }
 
@@ -22,6 +23,13 @@ const getAgentPlatform = (agent, slug) => {
     return agent.platforms?.find((p) => p.slug === slug) || null
 }
 
+// Helper: status akun platform (default registered, sama dengan form add/edit)
+const getStatus = (agent, slug) => {
+    const account = getAgentPlatform(agent, slug)
+    if (!account) return null
+    return statusConfig[account.status] ? account.status : 'registered'
+}
+
 // Helper: hitung persentase logged_in 
 const getStatusPercentage = (agent) => {
     // Gunakan TOTAL semua platform dari props, bukan agent.platforms
@@ -29,10 +37,7 @@ const getStatusPercentage = (agent) => {
     if (!allPlatforms || allPlatforms.length === 0) return 0
 
     // Hitung berapa banyak platform yg statusnya 'logged_in' untuk agent ini
-    const loggedInCount = allPlatforms.filter((p) => {
-        const agentPlatform = getAgentPlatform(agent, p.slug)
-        return agentPlatform?.status === 'logged_in'
-    }).length
+    const loggedInCount = allPlatforms.filter((p) => getStatus(agent, p.slug) === 'logged_in').length
 
     return Math.round((loggedInCount / allPlatforms.length) * 100)
 }
@@ -101,15 +106,20 @@ const getPercentageColor = (percentage) => {
                                 v-for="p in platforms"
                                 :key="p.id"
                                 class="group inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs"
-                                :class="getAgentPlatform(agent, p.slug)?.status 
-                                    ? statusConfig[getAgentPlatform(agent, p.slug).status]?.color 
+                                :class="getStatus(agent, p.slug) 
+                                    ? statusConfig[getStatus(agent, p.slug)].color 
                                     : 'bg-neutral-50 text-neutral-500 border-neutral-200'"
+                                :title="getStatus(agent, p.slug) 
+                                    ? statusConfig[getStatus(agent, p.slug)].label 
+                                    : 'Belum terdaftar'"
+                                :aria-label="`${p.name}: ${getStatus(agent, p.slug) ? statusConfig[getStatus(agent, p.slug)].label : 'Belum terdaftar'}`"
+                                :data-testid="`agent-platform-${agent.id}-${p.slug}`"
                             >
                                 <span class="font-medium">{{ p.name }}</span>
                                 
                                 <component 
-                                    v-if="getAgentPlatform(agent, p.slug)?.status"
-                                    :is="statusConfig[getAgentPlatform(agent, p.slug).status]?.icon" 
+                                    v-if="getStatus(agent, p.slug)"
+                                    :is="statusConfig[getStatus(agent, p.slug)].icon" 
                                     class="size-3.5 shrink-0" 
                                 />
                                 

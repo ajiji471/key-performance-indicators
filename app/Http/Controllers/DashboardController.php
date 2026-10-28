@@ -20,7 +20,7 @@ class DashboardController extends Controller
         ]);
 
         $agents = Agent::query()
-            ->with(['accounts.platform', 'tasks'])
+            ->with(['accounts.platform'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -38,15 +38,12 @@ class DashboardController extends Controller
                 'name'        => $agent->name,
                 'avatar_url'  => $agent->avatarUrl(),
                 'device_user' => $agent->device_user,
-                'platforms'   => $agent->accounts->map(function ($account) use ($agent) {
-                    $latestTask = $agent->tasks->firstWhere('platform_id', $account->platform_id);
-                    return [
-                        'slug'       => $account->platform->slug,
-                        'name'       => $account->platform->name,
-                        'identifier' => $account->identifier,
-                        'status'     => $latestTask ? $latestTask->status->value : 'registered',
-                    ];
-                })->values(),
+                'platforms'   => $agent->accounts->map(fn ($account) => [
+                    'slug'       => $account->platform->slug,
+                    'name'       => $account->platform->name,
+                    'identifier' => $account->identifier,
+                    'status'     => $account->status?->value ?? 'registered',
+                ])->values(),
             ]);
 
         return Inertia::render('Dashboard', [
