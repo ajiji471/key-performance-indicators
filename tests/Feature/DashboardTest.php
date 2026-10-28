@@ -10,6 +10,7 @@ use App\Models\Platform;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -29,6 +30,22 @@ class DashboardTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
                 ->where('auth.user', null)
+            );
+    }
+
+    public function test_avatar_url_mengikuti_host_request(): void
+    {
+        Storage::fake('public');
+        Agent::factory()->create([
+            'name'        => 'Andi',
+            'avatar_path' => 'agents/avatars/a.jpg',
+        ]);
+        Storage::disk('public')->put('agents/avatars/a.jpg', 'fake-image');
+
+        $this->login(Role::Admin)
+            ->get('http://127.0.0.1:8000/dashboard')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('agents.data.0.avatar_url', 'http://127.0.0.1:8000/storage/agents/avatars/a.jpg')
             );
     }
 
