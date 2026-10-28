@@ -111,8 +111,8 @@ const getPercentageColor = (percentage) => {
                                     : 'bg-neutral-50 text-neutral-500 border-neutral-200'"
                                 :title="getStatus(agent, p.slug) 
                                     ? statusConfig[getStatus(agent, p.slug)].label 
-                                    : 'Belum terdaftar'"
-                                :aria-label="`${p.name}: ${getStatus(agent, p.slug) ? statusConfig[getStatus(agent, p.slug)].label : 'Belum terdaftar'}`"
+                                    : 'Not registered'"
+                                :aria-label="`${p.name}: ${getStatus(agent, p.slug) ? statusConfig[getStatus(agent, p.slug)].label : 'Not registered'}`"
                                 :data-testid="`agent-platform-${agent.id}-${p.slug}`"
                             >
                                 <span class="font-medium">{{ p.name }}</span>
@@ -157,7 +157,7 @@ const getPercentageColor = (percentage) => {
                 <!-- Empty State -->
                 <tr v-if="!agents.length">
                     <td colspan="4" class="py-12 text-center text-neutral-400">
-                        Belum ada agent
+                        No agents yet
                     </td>
                 </tr>
             </tbody>

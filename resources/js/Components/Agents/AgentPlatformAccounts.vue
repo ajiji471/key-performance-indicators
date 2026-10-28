@@ -49,7 +49,7 @@ const STATUSES = [
                 <Input
                     v-model="form.accounts[index].password"
                     type="password"
-                    placeholder="Opsional"
+                    placeholder="Optional"
                     autocomplete="new-password"
                     :aria-label="`Password ${platform.name}`"
                     :data-testid="`agent-form-account-${platform.slug}-password`"

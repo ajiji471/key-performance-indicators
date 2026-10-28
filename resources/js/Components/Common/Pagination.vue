@@ -19,7 +19,7 @@ defineProps({
             :href="meta.prev_page_url"
             preserve-scroll
             preserve-state
-            aria-label="Halaman sebelumnya"
+            aria-label="Previous page"
             data-testid="page-prev"
             class="inline-flex items-center justify-center rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
         >
@@ -38,7 +38,7 @@ defineProps({
             :href="meta.next_page_url"
             preserve-scroll
             preserve-state
-            aria-label="Halaman berikutnya"
+            aria-label="Next page"
             data-testid="page-next"
             class="inline-flex items-center justify-center rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
         >

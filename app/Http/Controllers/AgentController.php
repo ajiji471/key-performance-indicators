@@ -56,7 +56,7 @@ class AgentController extends Controller
             throw $e;
         }
 
-        return Redirect::route('dashboard')->with('success', 'Agent ditambahkan.');
+        return Redirect::route('dashboard')->with('success', 'Agent added.');
     }
 
     // dipakai popup profile; sengaja tanpa page Inertia
@@ -147,7 +147,7 @@ class AgentController extends Controller
             Storage::disk('public')->delete($oldAvatar);
         }
 
-        return Redirect::route('dashboard')->with('success', 'Agent diperbarui.');
+        return Redirect::route('dashboard')->with('success', 'Agent updated.');
     }
 
     /**
@@ -190,6 +190,6 @@ class AgentController extends Controller
 
         $agent->delete();
 
-        return Redirect::route('dashboard')->with('success', 'Agent dihapus.');
+        return Redirect::route('dashboard')->with('success', 'Agent deleted.');
     }
 }

@@ -50,11 +50,11 @@ class StoreAgentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'avatar.mimes'                    => 'Avatar harus jpg, jpeg, png, atau webp.',
-            'avatar.max'                      => 'Ukuran avatar maksimal 2 MB.',
-            'accounts.*.platform_id.distinct' => 'Platform tidak boleh dobel.',
-            'accounts.*.platform_id.exists'   => 'Platform tidak dikenal.',
-            'accounts.*.status.enum'          => 'Status akun tidak valid.',
+            'avatar.mimes'                    => 'Avatar must be a jpg, jpeg, png, or webp file.',
+            'avatar.max'                      => 'Avatar size must not exceed 2 MB.',
+            'accounts.*.platform_id.distinct' => 'Platform must not be duplicated.',
+            'accounts.*.platform_id.exists'   => 'Unknown platform.',
+            'accounts.*.status.enum'          => 'Invalid account status.',
         ];
     }
 }

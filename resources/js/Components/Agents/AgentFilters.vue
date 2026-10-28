@@ -48,7 +48,7 @@ const toggleSort = () => {
             v-model="state.search"
             type="search"
             placeholder="Search name / email"
-            aria-label="Cari agent"
+            aria-label="Search agent"
             data-testid="agent-search"
             class="w-full sm:w-64"
         />
@@ -57,7 +57,7 @@ const toggleSort = () => {
         <Button 
             type="button" 
             variant="outline" 
-            aria-label="Urutkan nama" 
+            aria-label="Sort by name" 
             data-testid="agent-sort" 
             @click="toggleSort"
         >
@@ -69,13 +69,13 @@ const toggleSort = () => {
         <Button
             v-if="canManage"
             type="button"
-            aria-label="Tambah agent"
+            aria-label="Add agent"
             data-testid="agent-add"
             class="ml-auto sm:ml-0"
             @click="emit('add')"
         >
             <Plus class="size-4" />
-            add
+            Add
         </Button>
     </form>
 </template>

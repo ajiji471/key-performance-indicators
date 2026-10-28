@@ -104,7 +104,7 @@ const loadAgent = async (id) => {
 
         currentAvatar.value = agent.avatar_url
     } catch {
-        loadError.value = 'Gagal memuat data agent.'
+        loadError.value = 'Failed to load agent data.'
     } finally {
         loading.value = false
     }
@@ -153,27 +153,27 @@ onBeforeUnmount(resetPreview)
         <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
             <DialogHeader>
                 <DialogTitle data-testid="agent-form-title">
-                    {{ isEdit ? 'Edit agent' : 'Tambah agent' }}
+                    {{ isEdit ? 'Edit agent' : 'Add agent' }}
                 </DialogTitle>
                 <DialogDescription>
                     {{ isEdit
-                        ? 'Ubah data agent. Kosongkan identifier platform untuk menghapus akunnya.'
-                        : 'Nama, email, dan password wajib diisi. Akun platform boleh diisi sebagian.' }}
+                        ? 'Update agent data. Leave a platform identifier empty to delete its account.'
+                        : 'Name, email, and password are required. Platform accounts can be filled in partially.' }}
                 </DialogDescription>
             </DialogHeader>
 
             <p v-if="loadError" class="text-sm text-red-600">{{ loadError }}</p>
-            <p v-else-if="loading" class="text-sm text-neutral-500">Memuat data agent...</p>
+            <p v-else-if="loading" class="text-sm text-neutral-500">Loading agent data...</p>
 
             <form data-testid="agent-form" class="grid gap-6" @submit.prevent="submit">
-                <AgentFormSection title="Identitas" description="Data utama agent.">
+                <AgentFormSection title="Identity" description="Primary agent data.">
                     <div class="grid gap-2">
-                        <Label for="agent-name">Nama</Label>
+                        <Label for="agent-name">Name</Label>
                         <Input
                             id="agent-name"
                             v-model="form.name"
                             type="text"
-                            placeholder="Nama agent"
+                            placeholder="Agent name"
                             autocomplete="off"
                             data-testid="agent-form-name"
                         />
@@ -186,7 +186,7 @@ onBeforeUnmount(resetPreview)
                             id="agent-password"
                             v-model="form.password"
                             type="password"
-                            placeholder="Minimal 6 karakter"
+                            placeholder="At least 6 characters"
                             autocomplete="new-password"
                             data-testid="agent-form-password"
                         />
@@ -207,12 +207,12 @@ onBeforeUnmount(resetPreview)
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="agent-recovery-email">Email recovery</Label>
+                        <Label for="agent-recovery-email">Recovery email</Label>
                         <Input
                             id="agent-recovery-email"
                             v-model="form.recovery_email"
                             type="email"
-                            placeholder="Opsional"
+                            placeholder="Optional"
                             autocomplete="off"
                             data-testid="agent-form-recovery-email"
                         />
@@ -250,14 +250,14 @@ onBeforeUnmount(resetPreview)
                     </div>
                 </AgentFormSection>
 
-                <AgentFormSection title="Alamat" description="Alamat dan koordinat lokasi agent.">
+                <AgentFormSection title="Address" description="Agent address and coordinates.">
                     <div class="grid gap-2 sm:col-span-2">
                         <Label for="agent-address">Address</Label>
                         <textarea
                             id="agent-address"
                             v-model="form.address"
                             rows="2"
-                            placeholder="Opsional"
+                            placeholder="Optional"
                             data-testid="agent-form-address"
                             class="border-input focus-visible:border-ring focus-visible:ring-ring/50 min-h-16 w-full rounded-md border bg-transparent px-2.5 py-2 text-sm shadow-xs outline-none focus-visible:ring-3"
                         />
@@ -293,14 +293,14 @@ onBeforeUnmount(resetPreview)
                     </div>
                 </AgentFormSection>
 
-                <AgentFormSection title="Pekerjaan" description="Latar belakang agent.">
+                <AgentFormSection title="Work" description="Agent background.">
                     <div class="grid gap-2">
                         <Label for="agent-job">Job</Label>
                         <Input
                             id="agent-job"
                             v-model="form.job"
                             type="text"
-                            placeholder="Opsional"
+                            placeholder="Optional"
                             autocomplete="off"
                             data-testid="agent-form-job"
                         />
@@ -313,7 +313,7 @@ onBeforeUnmount(resetPreview)
                             id="agent-hobby"
                             v-model="form.hobby"
                             type="text"
-                            placeholder="Opsional"
+                            placeholder="Optional"
                             autocomplete="off"
                             data-testid="agent-form-hobby"
                         />
@@ -326,7 +326,7 @@ onBeforeUnmount(resetPreview)
                             id="agent-context"
                             v-model="form.context"
                             rows="3"
-                            placeholder="Catatan / deskripsi agent"
+                            placeholder="Notes / agent description"
                             data-testid="agent-form-context"
                             class="border-input focus-visible:border-ring focus-visible:ring-ring/50 min-h-20 w-full rounded-md border bg-transparent px-2.5 py-2 text-sm shadow-xs outline-none focus-visible:ring-3"
                         />
@@ -334,14 +334,14 @@ onBeforeUnmount(resetPreview)
                     </div>
                 </AgentFormSection>
 
-                <AgentFormSection title="Device" description="Perangkat yang dipakai agent.">
+                <AgentFormSection title="Device" description="Devices used by the agent.">
                     <div class="grid gap-2">
                         <Label for="agent-device-user">Device user</Label>
                         <Input
                             id="agent-device-user"
                             v-model="form.device_user"
                             type="text"
-                            placeholder="Opsional"
+                            placeholder="Optional"
                             autocomplete="off"
                             data-testid="agent-form-device-user"
                         />
@@ -354,7 +354,7 @@ onBeforeUnmount(resetPreview)
                             id="agent-device-number"
                             v-model="form.device_number"
                             type="text"
-                            placeholder="Opsional"
+                            placeholder="Optional"
                             autocomplete="off"
                             data-testid="agent-form-device-number"
                         />
@@ -373,7 +373,7 @@ onBeforeUnmount(resetPreview)
                     </div>
                 </AgentFormSection>
 
-                <AgentFormSection title="Akun platform" description="Kosongkan identifier kalau platform belum dipakai.">
+                <AgentFormSection title="Platform accounts" description="Leave the identifier empty if the platform is not used yet.">
                     <div class="grid gap-2 sm:col-span-2">
                         <AgentPlatformAccounts :form="form" :platforms="platforms" />
                         <InputError :message="form.errors.accounts" />
@@ -382,10 +382,10 @@ onBeforeUnmount(resetPreview)
 
                 <DialogFooter>
                     <Button type="button" variant="outline" data-testid="agent-form-cancel" @click="close">
-                        Batal
+                        Cancel
                     </Button>
                     <Button type="submit" :disabled="form.processing || loading" data-testid="agent-form-submit">
-                        {{ form.processing ? 'Menyimpan...' : 'Simpan' }}
+                        {{ form.processing ? 'Saving...' : 'Save' }}
                     </Button>
                 </DialogFooter>
             </form>

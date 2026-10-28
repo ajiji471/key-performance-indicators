@@ -16,7 +16,7 @@ class AgentAccountController extends Controller
         // create lewat relasi: agent_id diisi otomatis (tidak ada di #[Fillable])
         $agent->accounts()->create($request->validated());
 
-        return Redirect::route('dashboard')->with('success', 'Akun platform ditambahkan.');
+        return Redirect::route('dashboard')->with('success', 'Platform account added.');
     }
 
     public function update(UpdateAgentAccountRequest $request, Agent $agent, AgentAccount $account): RedirectResponse
@@ -31,7 +31,7 @@ class AgentAccountController extends Controller
 
         $account->fill($data)->save();
 
-        return Redirect::route('dashboard')->with('success', 'Akun platform diperbarui.');
+        return Redirect::route('dashboard')->with('success', 'Platform account updated.');
     }
 
     public function destroy(Agent $agent, AgentAccount $account): RedirectResponse
@@ -40,7 +40,7 @@ class AgentAccountController extends Controller
 
         $account->delete();
 
-        return Redirect::route('dashboard')->with('success', 'Akun platform dihapus.');
+        return Redirect::route('dashboard')->with('success', 'Platform account deleted.');
     }
 
     private function ensureBelongsToAgent(Agent $agent, AgentAccount $account): void

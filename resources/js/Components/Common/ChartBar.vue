@@ -62,7 +62,7 @@ const empty = computed(() => props.platforms.every((p) => p.logged_in === 0 && p
 <template>
     <figure :data-testid="`chart-${name}`" :aria-label="title" role="img" class="flex flex-col gap-2">
         <figcaption class="font-medium text-neutral-900">{{ title }}</figcaption>
-        <p v-if="empty" class="py-8 text-center text-neutral-400">Belum ada data</p>
+        <p v-if="empty" class="py-8 text-center text-neutral-400">No data yet</p>
         <div v-else class="h-64 w-full">
             <Bar :data="data" :options="options" />
         </div>

@@ -46,7 +46,7 @@ const closeEdit = (open) => {
 
         <div class="mx-auto flex max-w-7xl flex-col gap-6">
             <!-- Section Chart (Stacked Bar) -->
-            <section aria-label="Statistik agent per platform" class="grid gap-4 md:grid-cols-3">
+            <section aria-label="Agent statistics per platform" class="grid gap-4 md:grid-cols-3">
                 <div v-for="c in chartCards" :key="c.key" class="rounded-lg border bg-white p-4">
                     <ChartBar
                         :name="c.key"
@@ -57,7 +57,7 @@ const closeEdit = (open) => {
             </section>
 
             <!-- Section Tabel -->
-            <section aria-label="Daftar agent" class="flex flex-col gap-3 rounded-lg border bg-white p-4">
+            <section aria-label="Agent list" class="flex flex-col gap-3 rounded-lg border bg-white p-4">
                 <AgentFilters :filters="filters" :can-manage="canManage" @add="addOpen = true" />
                 <AgentTable :agents="agents.data" :platforms="platforms" :can-manage="canManage" @open="editingId = $event" />
                 <Pagination :meta="agents" />
