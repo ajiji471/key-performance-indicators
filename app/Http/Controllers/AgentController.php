@@ -21,6 +21,14 @@ class AgentController extends Controller
         // baris platform tanpa identifier = tidak diisi, tidak perlu disimpan
         $accounts = collect($data['accounts'] ?? [])
             ->filter(fn (array $row) => filled($row['identifier'] ?? null))
+            ->map(function (array $row) {
+                // status kosong: buang key agar default DB `registered` dipakai
+                if (blank($row['status'] ?? null)) {
+                    unset($row['status']);
+                }
+
+                return $row;
+            })
             ->values()
             ->all();
 
@@ -83,6 +91,7 @@ class AgentController extends Controller
                     'platform'    => $account->platform->name,
                     'identifier'  => $account->identifier,
                     'password'    => $account->password,
+                    'status'      => $account->status->value,
                 ])->values(),
             ],
         ]);
@@ -99,6 +108,7 @@ class AgentController extends Controller
                 'platform_id' => (int) $row['platform_id'],
                 'identifier'  => trim((string) ($row['identifier'] ?? '')),
                 'password'    => (string) ($row['password'] ?? ''),
+                'status'      => (string) ($row['status'] ?? ''),
             ])
             ->all();
 
@@ -141,7 +151,9 @@ class AgentController extends Controller
     }
 
     /**
-     * @param  array<int, array{platform_id:int, identifier:string, password:string}>  $rows
+     * Sinkron akun platform: identifier kosong = hapus, password/status kosong = pertahankan.
+     *
+     * @param  array<int, array{platform_id:int, identifier:string, password:string, status:string}>  $rows
      */
     private function syncAccounts(Agent $agent, array $rows): void
     {
@@ -158,6 +170,10 @@ class AgentController extends Controller
 
             if ($row['password'] !== '') {
                 $attributes['password'] = $row['password'];
+            }
+
+            if ($row['status'] !== '') {
+                $attributes['status'] = $row['status'];
             }
 
             $existing

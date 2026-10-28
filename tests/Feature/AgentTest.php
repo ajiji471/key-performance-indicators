@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AccountStatus;
 use App\Enums\Role;
 use App\Models\Agent;
+use App\Models\AgentAccount;
 use App\Models\Platform;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -356,5 +358,107 @@ class AgentTest extends TestCase
         $this->login()->delete("/agents/{$agent->id}")->assertRedirect(route('dashboard'));
 
         Storage::disk('public')->assertMissing('agents/avatars/hapus.png');
+    }
+
+    public function test_akun_baru_default_status_registered(): void
+    {
+        $platform = Platform::factory()->create();
+
+        $this->login()->post('/agents', [
+            ...$this->payload(),
+            'accounts' => [
+                ['platform_id' => $platform->id, 'identifier' => 'a@example.com'],
+            ],
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertSame(AccountStatus::Registered, AgentAccount::firstOrFail()->status);
+        $this->assertSame('registered', DB::table('agent_accounts')->value('status'));
+    }
+
+    public function test_store_akun_dengan_status(): void
+    {
+        $platform = Platform::factory()->create();
+
+        $this->login()->post('/agents', [
+            ...$this->payload(),
+            'accounts' => [
+                ['platform_id' => $platform->id, 'identifier' => 'a@example.com', 'status' => 'trouble'],
+            ],
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertSame(AccountStatus::Trouble, AgentAccount::firstOrFail()->status);
+    }
+
+    public function test_update_status_akun_platform(): void
+    {
+        $platform = Platform::factory()->create();
+        $agent = Agent::factory()->create();
+        $agent->accounts()->create([
+            'platform_id' => $platform->id,
+            'identifier'  => 'lama',
+            'status'      => AccountStatus::Registered,
+        ]);
+
+        $this->login()->patch("/agents/{$agent->id}", [
+            ...$this->payload(),
+            'accounts' => [
+                ['platform_id' => $platform->id, 'identifier' => 'lama', 'status' => 'trouble'],
+            ],
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertSame(AccountStatus::Trouble, $agent->accounts()->firstOrFail()->status);
+    }
+
+    public function test_update_tanpa_status_menjaga_status_lama(): void
+    {
+        $platform = Platform::factory()->create();
+        $agent = Agent::factory()->create();
+        $agent->accounts()->create([
+            'platform_id' => $platform->id,
+            'identifier'  => 'lama',
+            'status'      => AccountStatus::Recovered,
+        ]);
+
+        $this->login()->patch("/agents/{$agent->id}", [
+            ...$this->payload(),
+            'accounts' => [
+                ['platform_id' => $platform->id, 'identifier' => 'baru'],
+            ],
+        ])->assertRedirect(route('dashboard'));
+
+        $account = $agent->accounts()->firstOrFail();
+
+        $this->assertSame('baru', $account->identifier);
+        $this->assertSame(AccountStatus::Recovered, $account->status);
+    }
+
+    public function test_status_akun_tidak_valid_ditolak(): void
+    {
+        $platform = Platform::factory()->create();
+
+        $this->login()->post('/agents', [
+            ...$this->payload(),
+            'accounts' => [
+                ['platform_id' => $platform->id, 'identifier' => 'a@example.com', 'status' => 'ngawur'],
+            ],
+        ])->assertSessionHasErrors('accounts.0.status');
+
+        $this->assertDatabaseCount('agents', 0);
+        $this->assertDatabaseCount('agent_accounts', 0);
+    }
+
+    public function test_show_menyertakan_status_akun(): void
+    {
+        $platform = Platform::factory()->create();
+        $agent = Agent::factory()->create();
+        $agent->accounts()->create([
+            'platform_id' => $platform->id,
+            'identifier'  => 'a@example.com',
+            'status'      => AccountStatus::Trouble,
+        ]);
+
+        $this->login()->getJson("/agents/{$agent->id}")
+            ->assertOk()
+            ->assertJsonPath('agent.accounts.0.status', 'trouble');
     }
 }

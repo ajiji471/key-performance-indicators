@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\AccountStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -39,6 +40,7 @@ class StoreAgentRequest extends FormRequest
             'accounts.*.platform_id' => ['required', 'integer', Rule::exists('platforms', 'id'), 'distinct'],
             'accounts.*.identifier'  => ['nullable', 'string', 'max:255'],
             'accounts.*.password'    => ['nullable', 'string', 'max:255'],
+            'accounts.*.status'      => ['nullable', Rule::enum(AccountStatus::class)],
         ];
     }
 
@@ -52,6 +54,7 @@ class StoreAgentRequest extends FormRequest
             'avatar.max'                      => 'Ukuran avatar maksimal 2 MB.',
             'accounts.*.platform_id.distinct' => 'Platform tidak boleh dobel.',
             'accounts.*.platform_id.exists'   => 'Platform tidak dikenal.',
+            'accounts.*.status.enum'          => 'Status akun tidak valid.',
         ];
     }
 }

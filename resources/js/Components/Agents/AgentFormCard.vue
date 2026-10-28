@@ -39,6 +39,7 @@ const emptyForm = () => ({
         platform_id: platform.id,
         identifier:  '',
         password:    '',
+        status:      'registered',
     })),
 })
 
@@ -96,6 +97,7 @@ const loadAgent = async (id) => {
                     platform_id: platform.id,
                     identifier:  found?.identifier ?? '',
                     password:    found?.password ?? '',
+                    status:      found?.status ?? 'registered',
                 }
             }),
         })
