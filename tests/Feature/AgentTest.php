@@ -232,4 +232,129 @@ class AgentTest extends TestCase
 
         $this->assertStringNotContainsString('rahasia-banget-123', $list);
     }
+
+    public function test_update_agent_field_lengkap(): void
+    {
+        $agent = Agent::factory()->create();
+
+        $this->login()->patch("/agents/{$agent->id}", [
+            ...$this->payload(['name' => 'Budi Update']),
+            'job'       => 'Supervisor',
+            'address'   => 'Jl. Baru',
+            'latitude'  => '-7.1000000',
+            'longitude' => '110.1000000',
+        ])->assertRedirect(route('dashboard'));
+
+        $agent->refresh();
+
+        $this->assertSame('Budi Update', $agent->name);
+        $this->assertSame('Supervisor', $agent->job);
+        $this->assertSame('Jl. Baru', $agent->address);
+        $this->assertSame('-7.1000000', $agent->latitude);
+    }
+
+    public function test_update_agent_sinkron_akun_platform(): void
+    {
+        [$p1, $p2, $p3] = Platform::factory()->count(3)->create();
+        $agent = Agent::factory()->create();
+
+        $agent->accounts()->create(['platform_id' => $p1->id, 'identifier' => 'lama-1']);
+        $agent->accounts()->create(['platform_id' => $p2->id, 'identifier' => 'lama-2']);
+
+        $this->login()->patch("/agents/{$agent->id}", [
+            ...$this->payload(),
+            'accounts' => [
+                ['platform_id' => $p1->id, 'identifier' => 'baru-1', 'password' => 'pw-baru'],
+                ['platform_id' => $p2->id, 'identifier' => ''],
+                ['platform_id' => $p3->id, 'identifier' => 'baru-3', 'password' => 'pw-3'],
+            ],
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertDatabaseHas('agent_accounts', ['agent_id' => $agent->id, 'platform_id' => $p1->id, 'identifier' => 'baru-1']);
+        $this->assertDatabaseMissing('agent_accounts', ['agent_id' => $agent->id, 'platform_id' => $p2->id]);
+        $this->assertDatabaseHas('agent_accounts', ['agent_id' => $agent->id, 'platform_id' => $p3->id, 'identifier' => 'baru-3']);
+
+        $this->assertSame('pw-baru', $agent->accounts()->where('platform_id', $p1->id)->first()->password);
+    }
+
+    public function test_update_agent_password_akun_kosong_tidak_menimpa(): void
+    {
+        $platform = Platform::factory()->create();
+        $agent = Agent::factory()->create();
+        $agent->accounts()->create(['platform_id' => $platform->id, 'identifier' => 'lama', 'password' => 'pw-lama']);
+
+        $this->login()->patch("/agents/{$agent->id}", [
+            ...$this->payload(),
+            'accounts' => [
+                ['platform_id' => $platform->id, 'identifier' => 'baru', 'password' => ''],
+            ],
+        ])->assertRedirect(route('dashboard'));
+
+        $account = $agent->accounts()->where('platform_id', $platform->id)->first();
+
+        $this->assertSame('baru', $account->identifier);
+        $this->assertSame('pw-lama', $account->password);
+    }
+
+    public function test_update_agent_ganti_avatar(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('agents/avatars/lama.png', 'lama');
+
+        $agent = Agent::factory()->create(['avatar_path' => 'agents/avatars/lama.png']);
+
+        $this->login()->patch("/agents/{$agent->id}", [
+            ...$this->payload(),
+            'avatar' => UploadedFile::fake()->image('baru.jpg'),
+        ])->assertRedirect(route('dashboard'));
+
+        $agent->refresh();
+
+        $this->assertNotSame('agents/avatars/lama.png', $agent->avatar_path);
+        Storage::disk('public')->assertMissing('agents/avatars/lama.png');
+        Storage::disk('public')->assertExists($agent->avatar_path);
+    }
+
+    public function test_update_agent_tanpa_avatar_menjaga_avatar_lama(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('agents/avatars/lama.png', 'lama');
+
+        $agent = Agent::factory()->create(['avatar_path' => 'agents/avatars/lama.png']);
+
+        $this->login()->patch("/agents/{$agent->id}", $this->payload(['name' => 'Tanpa Avatar']))
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertSame('agents/avatars/lama.png', $agent->refresh()->avatar_path);
+        Storage::disk('public')->assertExists('agents/avatars/lama.png');
+    }
+
+    public function test_update_platform_dobel_ditolak(): void
+    {
+        $platform = Platform::factory()->create();
+        $agent = Agent::factory()->create(['name' => 'Tetap']);
+
+        $this->login()->patch("/agents/{$agent->id}", [
+            ...$this->payload(['name' => 'Berubah']),
+            'accounts' => [
+                ['platform_id' => $platform->id, 'identifier' => 'a@example.com'],
+                ['platform_id' => $platform->id, 'identifier' => 'b@example.com'],
+            ],
+        ])->assertSessionHasErrors('accounts.1.platform_id');
+
+        $this->assertSame('Tetap', $agent->refresh()->name);
+        $this->assertDatabaseCount('agent_accounts', 0);
+    }
+
+    public function test_hapus_agent_menghapus_avatar(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('agents/avatars/hapus.png', 'x');
+
+        $agent = Agent::factory()->create(['avatar_path' => 'agents/avatars/hapus.png']);
+
+        $this->login()->delete("/agents/{$agent->id}")->assertRedirect(route('dashboard'));
+
+        Storage::disk('public')->assertMissing('agents/avatars/hapus.png');
+    }
 }

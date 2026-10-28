@@ -28,7 +28,12 @@ const props = defineProps({
 const page = usePage()
 const canManage = computed(() => manageRoles.includes(page.props.auth.user.role))
 const addOpen = ref(false)
-const profileId = ref(null)
+const editingId = ref(null)
+const editOpen = computed(() => editingId.value !== null)
+
+const closeEdit = (open) => {
+    if (!open) editingId.value = null
+}
 </script>
 
 <template>
@@ -54,12 +59,18 @@ const profileId = ref(null)
             <!-- Section Tabel -->
             <section aria-label="Daftar agent" class="flex flex-col gap-3 rounded-lg border bg-white p-4">
                 <AgentFilters :filters="filters" :can-manage="canManage" @add="addOpen = true" />
-                <AgentTable :agents="agents.data" :platforms="platforms" :can-manage="canManage" @open="profileId = $event" />
+                <AgentTable :agents="agents.data" :platforms="platforms" :can-manage="canManage" @open="editingId = $event" />
                 <Pagination :meta="agents" />
             </section>
         </div>
 
         <AgentFormCard v-model:open="addOpen" :platforms="platforms" />
+        <AgentFormCard
+            :open="editOpen"
+            :agent-id="editingId"
+            :platforms="platforms"
+            @update:open="closeEdit"
+        />
 
     </AuthenticatedLayout>
 </template>

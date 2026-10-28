@@ -91,21 +91,87 @@ class AgentController extends Controller
     public function update(UpdateAgentRequest $request, Agent $agent): RedirectResponse
     {
         $data = $request->validated();
+        $hasAccounts = array_key_exists('accounts', $data);
 
-        // password kosong = jangan timpa password lama; akun platform punya endpoint sendiri
+        // identifier kosong = akun platform dihapus; password kosong = pertahankan
+        $accounts = collect($data['accounts'] ?? [])
+            ->map(fn (array $row) => [
+                'platform_id' => (int) $row['platform_id'],
+                'identifier'  => trim((string) ($row['identifier'] ?? '')),
+                'password'    => (string) ($row['password'] ?? ''),
+            ])
+            ->all();
+
         unset($data['accounts'], $data['avatar']);
 
         if (blank($data['password'] ?? null)) {
             unset($data['password']);
         }
 
-        $agent->fill($data)->save();
+        $oldAvatar  = $agent->avatar_path;
+        $avatarPath = $request->file('avatar')?->store('agents/avatars', 'public');
+
+        try {
+            DB::transaction(function () use ($agent, $data, $accounts, $hasAccounts, $avatarPath) {
+                $agent->fill($data);
+
+                if ($avatarPath) {
+                    $agent->avatar_path = $avatarPath;
+                }
+
+                $agent->save();
+
+                if ($hasAccounts) {
+                    $this->syncAccounts($agent, $accounts);
+                }
+            });
+        } catch (Throwable $e) {
+            if ($avatarPath) {
+                Storage::disk('public')->delete($avatarPath);
+            }
+
+            throw $e;
+        }
+
+        if ($avatarPath && $oldAvatar) {
+            Storage::disk('public')->delete($oldAvatar);
+        }
 
         return Redirect::route('dashboard')->with('success', 'Agent diperbarui.');
     }
 
+    /**
+     * @param  array<int, array{platform_id:int, identifier:string, password:string}>  $rows
+     */
+    private function syncAccounts(Agent $agent, array $rows): void
+    {
+        foreach ($rows as $row) {
+            $existing = $agent->accounts()->where('platform_id', $row['platform_id'])->first();
+
+            if ($row['identifier'] === '') {
+                $existing?->delete();
+
+                continue;
+            }
+
+            $attributes = ['identifier' => $row['identifier']];
+
+            if ($row['password'] !== '') {
+                $attributes['password'] = $row['password'];
+            }
+
+            $existing
+                ? $existing->fill($attributes)->save()
+                : $agent->accounts()->create([...$attributes, 'platform_id' => $row['platform_id']]);
+        }
+    }
+
     public function destroy(Agent $agent): RedirectResponse
     {
+        if ($agent->avatar_path) {
+            Storage::disk('public')->delete($agent->avatar_path);
+        }
+
         $agent->delete();
 
         return Redirect::route('dashboard')->with('success', 'Agent dihapus.');

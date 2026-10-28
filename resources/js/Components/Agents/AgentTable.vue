@@ -132,8 +132,9 @@ const getPercentageColor = (percentage) => {
                     <!-- Actions Column -->
                     <td class="px-4 py-3 text-right">
                         <button
+                            v-if="canManage"
                             type="button"
-                            :aria-label="`${canManage ? 'Edit' : 'Lihat'} profile ${agent.name}`"
+                            :aria-label="`Edit profile ${agent.name}`"
                             :data-testid="`agent-open-${agent.id}`"
                             class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
                             @click="emit('open', agent.id)"
