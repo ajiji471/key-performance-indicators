@@ -36,6 +36,7 @@ class DashboardController extends Controller
             ->through(fn (Agent $agent) => [
                 'id'          => $agent->id,
                 'name'        => $agent->name,
+                'avatar_url'  => $agent->avatarUrl(),
                 'device_user' => $agent->device_user,
                 'platforms'   => $agent->accounts->map(function ($account) use ($agent) {
                     $latestTask = $agent->tasks->firstWhere('platform_id', $account->platform_id);

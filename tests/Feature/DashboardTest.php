@@ -60,11 +60,11 @@ class DashboardTest extends TestCase
         $this->login(Role::Admin)
             ->get('/dashboard')
             ->assertInertia(fn (Assert $page) => $page
-                ->where('stats.today.registered', 1)
-                ->where('stats.today.logged_in', 0)
-                ->where('stats.month.logged_in', 0)
-                ->where('stats.all.registered', 1)
-                ->where('stats.all.logged_in', 1)
+                ->where('stats.today.0.registered', 1)
+                ->where('stats.today.0.logged_in', 0)
+                ->where('stats.month.0.logged_in', 0)
+                ->where('stats.all.0.registered', 1)
+                ->where('stats.all.0.logged_in', 1)
             );
     }
 

@@ -31,7 +31,7 @@ class AgentAccountTest extends TestCase
                 'identifier'  => 'budi@gmail.com',
                 'password'    => 'rahasia123',
             ])
-            ->assertRedirect(route('agents.show', $agent));
+            ->assertRedirect(route('dashboard'));
 
         $account = AgentAccount::first();
 
@@ -81,7 +81,7 @@ class AgentAccountTest extends TestCase
                 'platform_id' => $platform->id,
                 'identifier'  => 'budi-baru@gmail.com',
             ])
-            ->assertRedirect(route('agents.show', $agent));
+            ->assertRedirect(route('dashboard'));
 
         $account->refresh();
 
@@ -97,7 +97,7 @@ class AgentAccountTest extends TestCase
 
         $this->login()
             ->delete("/agents/{$agent->id}/accounts/{$account->id}")
-            ->assertRedirect(route('agents.show', $agent));
+            ->assertRedirect(route('dashboard'));
 
         $this->assertDatabaseMissing('agent_accounts', ['id' => $account->id]);
     }

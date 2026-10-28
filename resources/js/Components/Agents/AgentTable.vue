@@ -67,7 +67,13 @@ const getPercentageColor = (percentage) => {
                     <!-- Name Column -->
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-3">
-                            <div class="size-10 shrink-0 rounded-full bg-neutral-200 flex items-center justify-center text-neutral-600 font-bold">
+                            <img
+                                v-if="agent.avatar_url"
+                                :src="agent.avatar_url"
+                                :alt="`Avatar ${agent.name}`"
+                                class="size-10 shrink-0 rounded-full object-cover"
+                            />
+                            <div v-else class="size-10 shrink-0 rounded-full bg-neutral-200 flex items-center justify-center text-neutral-600 font-bold">
                                 {{ agent.name.charAt(0).toUpperCase() }}
                             </div>
                             <div>

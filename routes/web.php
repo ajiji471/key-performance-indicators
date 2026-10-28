@@ -17,16 +17,24 @@ Route::middleware(['auth', 'role:admin,user,auditor'])->group(function () {
     // profile
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // agent: baca untuk semua role
-    Route::resource('agents', AgentController::class)->only(['index', 'show', 'create', 'edit']);
+    // agent: profile (JSON) untuk semua role
+    Route::get('/agents/{agent}', [AgentController::class, 'show'])
+        ->whereNumber('agent')->name('agents.show');
 
     // agent & akun platform: tulis hanya admin & user
     Route::middleware('role:admin,user')->group(function () {
-        Route::resource('agents', AgentController::class)->only(['store', 'update', 'destroy']);
+        Route::post('/agents', [AgentController::class, 'store'])->name('agents.store');
+        Route::patch('/agents/{agent}', [AgentController::class, 'update'])
+            ->whereNumber('agent')->name('agents.update');
+        Route::delete('/agents/{agent}', [AgentController::class, 'destroy'])
+            ->whereNumber('agent')->name('agents.destroy');
 
-        Route::post('/agents/{agent}/accounts', [AgentAccountController::class, 'store'])->name('agents.accounts.store');
-        Route::patch('/agents/{agent}/accounts/{account}', [AgentAccountController::class, 'update'])->name('agents.accounts.update');
-        Route::delete('/agents/{agent}/accounts/{account}', [AgentAccountController::class, 'destroy'])->name('agents.accounts.destroy');
+        Route::post('/agents/{agent}/accounts', [AgentAccountController::class, 'store'])
+            ->whereNumber('agent')->name('agents.accounts.store');
+        Route::patch('/agents/{agent}/accounts/{account}', [AgentAccountController::class, 'update'])
+            ->whereNumber('agent')->whereNumber('account')->name('agents.accounts.update');
+        Route::delete('/agents/{agent}/accounts/{account}', [AgentAccountController::class, 'destroy'])
+            ->whereNumber('agent')->whereNumber('account')->name('agents.accounts.destroy');
     });
 });
 

@@ -59,7 +59,7 @@ const profileId = ref(null)
             </section>
         </div>
 
-        <AgentFormCard v-model:open="addOpen" />
+        <AgentFormCard v-model:open="addOpen" :platforms="platforms" />
 
     </AuthenticatedLayout>
 </template>

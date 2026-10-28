@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'name', 'avatar_path', 'email', 'recovery_email', 'password',
@@ -33,6 +34,11 @@ class Agent extends Model
     public function accounts(): HasMany
     {
         return $this->hasMany(AgentAccount::class);
+    }
+
+    public function avatarUrl(): ?string
+    {
+        return $this->avatar_path ? Storage::disk('public')->url($this->avatar_path) : null;
     }
 
     public function creator(): BelongsTo

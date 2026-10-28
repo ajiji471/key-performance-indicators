@@ -1,701 +1,473 @@
-# TEMPLATE LARAVEL - INERTIA - VUE - SHADCN
-
-## PURPOSE & OVERVIEW
-
-Template starter lengkap untuk membangun aplikasi web modern menggunakan **Laravel 11** sebagai backend framework dengan **Inertia.js** sebagai bridge ke **Vue 3** untuk frontend, dilengkapi dengan **shadcn/ui** (Reka UI) sebagai UI component library berbasis Tailwind CSS.
-
-**Gunakan skill ini ketika:**
-- User ingin membuat project baru dengan stack Laravel-Inertia-Vue-Shadcn
-- User perlu menambah fitur/page/component ke template ini
-- User bertanya tentang struktur project atau best practices
-- User ingin understand bagaimana stack ini bekerja bersama
-- User memerlukan guidance tentang authentication, routing, atau component structure
-
-## TECHNOLOGY STACK & RATIONALE
-
-### **Backend: Laravel 11**
-- Full-stack PHP framework dengan built-in routing, authentication, middleware
-- Fitur ORM (Eloquent) untuk database interactions
-- Blade templating engine (tetapi diganti dengan Vue di sini)
-- Excellent for rapid development dengan security best practices
-
-### **Bridge: Inertia.js**
-- Menghubungkan Laravel backend dengan Vue frontend secara seamless
-- Mengirim data dari Laravel controller ke Vue component seperti normal page rendering
-- Automatic URL history handling dan component caching
-- Eliminates API complexity untuk SPA-like experience
-
-### **Frontend: Vue 3 (Composition API)**
-- Progressive JavaScript framework untuk UI interactivity
-- Composition API untuk reusable logic
-- Single File Components (.vue files) dengan style scoping
-- Excellent DX dengan hot module replacement (HMR)
-
-### **Build Tool: Vite**
-- Ultra-fast build tool dengan native ES modules support
-- Fast HMR untuk development experience
-- Optimized production builds
-- Diintegrasikan via laravel-vite-plugin
-
-### **Styling: Tailwind CSS 3**
-- Utility-first CSS framework
-- Rapid prototyping dan consistent design system
-- @tailwindcss/forms plugin untuk pre-styled form elements
-- Reduced CSS bundle size
-
-### **UI Components: Shadcn/UI (via Reka UI)**
-- High-quality, accessible Vue components
-- Built on top of Tailwind CSS
-- Copy-paste philosophy (components bukan installed)
-- Includes Button, Card, Dialog, Form inputs, etc.
-
-## SETUP & INSTALLATION
-
-```bash
-# 1. Clone atau download template
-git clone https://github.com/ajiji471/laravel-inertia-vue-template
-cd laravel-inertia-vue-template
-
-# 2. Install PHP dependencies
-composer install
-
-# 3. Install Node dependencies
-npm install
-
-# 4. Copy environment file
-cp .env.example .env
-
-# 5. Generate application key
-php artisan key:generate
-
-# 6. Create database & run migrations
-php artisan migrate
-
-# 7. Start development servers (di terminal terpisah):
-# Terminal 1 - PHP server:
-php artisan serve
-
-# Terminal 2 - Vite dev server:
-npm run dev
-
-# Production build:
-npm run build
-```
-
-**Requirements:**
-- PHP >= 8.2
-- Node.js >= 18
-- npm atau yarn
-- Database (SQLite, MySQL, PostgreSQL, etc.)
-
-## PROJECT STRUCTURE EXPLAINED
-
-### **`app/Http/Controllers/`** - Backend Logic
-```
-Controllers/
-├── Auth/              # Authentication-related controllers
-│  ├── LoginController.php
-│  ├── RegisterController.php
-│  └── PasswordResetController.php
-└── ProfileController.php  # User profile management
-```
-- Menangani business logic dan data processing
-- Menerima requests dan return Inertia responses
-- Menggunakan Service layer untuk complex logic (recommended)
-
-### **`resources/js/Components/`** - Vue Components
-```
-Components/
-├── ui/               # Shadcn/reka-ui components (copy-paste)
-│  ├── button/
-│  ├── card/
-│  ├── dialog/
-│  └── form/
-├── Layouts/          # Layout wrapper components
-│  ├── AuthenticatedLayout.vue
-│  └── GuestLayout.vue
-└── [Custom Components] # Reusable app-specific components
-```
-- **UI Components**: Pre-built dari shadcn (atomic level)
-- **Custom Components**: Domain-specific, reusable logic
-- Naming: PascalCase (e.g., UserCard.vue, ProductForm.vue)
-
-### **`resources/js/Pages/`** - Inertia Pages
-```
-Pages/
-├── Auth/            # Authentication pages
-│  ├── Login.vue
-│  ├── Register.vue
-│  └── ForgotPassword.vue
-├── Profile/         # User profile pages
-│  └── Edit.vue
-├── Dashboard.vue    # Main dashboard
-└── Welcome.vue      # Landing page
-```
-- Full-page components yang dirender oleh Inertia
-- Correspond to routes di `routes/web.php`
-- File path = URL structure (e.g., Pages/Products/Index.vue → /products)
-
-### **`app/Models/`** - Database Models
-```
-Models/
-└── User.php         # Eloquent model untuk users table
-```
-- Laravel Eloquent ORM untuk database interactions
-- Definisikan relationships, scopes, mutators di sini
-
-### **`database/migrations/`** - Schema Definitions
-```
-migrations/
-├── create_users_table.php
-├── create_cache_table.php
-└── create_jobs_table.php
-```
-- Version control untuk database schema
-- Run: `php artisan migrate`
-
-### **`routes/`** - URL Routes
-```
-web.php        # Web routes (return Inertia responses)
-auth.php       # Authentication routes (included in web.php)
-```
-- Define URL routes yang point ke controllers
-- Inertia automatically handle client-side routing
-
-### **`config/`** - Application Configuration
-- `app.php` - App name, timezone, providers
-- `auth.php` - Authentication guards dan providers
-- `database.php` - Database connections
-- `mail.php` - Email configuration
-
-## KEY FEATURES & WORKFLOWS
-
-### **Authentication System**
-Template include lengkap authentication:
-- User registration dengan email verification
-- Login dengan remember me
-- Password reset
-- Middleware-protected routes
-- Profile edit & password change
-
-**Files involved:**
-- Controllers: `app/Http/Controllers/Auth/`
-- Pages: `resources/js/Pages/Auth/`
-- Routes: `routes/auth.php`
-- Middleware: `app/Http/Middleware/Authenticate.php`
-
-### **Creating New Pages**
-
-1. **Create Controller:**
-```php
-// app/Http/Controllers/ProductController.php
-namespace App\Http\Controllers;
-
-class ProductController extends Controller {
-    public function index() {
-        $products = Product::all();
-        return inertia('Products/Index', ['products' => $products]);
-    }
-}
-```
-
-2. **Create Vue Page:**
-```vue
-<!-- resources/js/Pages/Products/Index.vue -->
-<template>
-  <AuthenticatedLayout>
-    <div class="py-12">
-      <h1 class="text-3xl font-bold">Products</h1>
-      <!-- Content here -->
-    </div>
-  </AuthenticatedLayout>
-</template>
-
-<script setup>
-defineProps({
-  products: Array
-})
-</script>
-```
-
-3. **Add Route:**
-```php
-// routes/web.php
-Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-```
-
-### **Creating New Components**
-
-```vue
-<!-- resources/js/Components/ProductCard.vue -->
-<template>
-  <Card>
-    <CardHeader>
-      <CardTitle>{{ product.name }}</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <p>{{ product.description }}</p>
-    </CardContent>
-  </Card>
-</template>
-
-<script setup>
-import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card'
-
-defineProps({
-  product: {
-    type: Object,
-    required: true
-  }
-})
-</script>
-```
-
-### **Form Handling**
-
-Using Inertia form helper:
-```vue
-<script setup>
-import { useForm } from '@inertiajs/vue3'
-
-const form = useForm({
-  name: '',
-  email: ''
-})
-
-const submit = () => {
-  form.post('/users', {
-    onSuccess: () => alert('User created!'),
-    onError: (errors) => console.log(errors)
-  })
-}
-</script>
-
-<template>
-  <form @submit.prevent="submit">
-    <input v-model="form.name" type="text" />
-    <button type="submit" :disabled="form.processing">Save</button>
-  </form>
-</template>
-```
-
-## FOLDER ORGANIZATION PATTERNS
-
-**Backend (Laravel):**
-```
-app/
-├── Http/Controllers/[FeatureName]/
-├── Models/[ModelName].php
-├── Actions/               # Business logic classes (optional but recommended)
-├── Services/              # Reusable services
-└── Requests/[FeatureName]/[ActionName]Request.php
-```
-
-**Frontend (Vue):**
-```
-resources/js/
-├── Components/ui/        # Shadcn components (readonly)
-├── Components/Common/    # Reusable components
-├── Pages/[Feature]/      # Feature pages
-├── Layouts/              # Layout wrappers
-├── lib/                  # Utility functions
-└── stores/               # Pinia stores (if using state management)
-```
-
-## BEST PRACTICES
-
-### **1. Component Naming**
-- Vue components: PascalCase (ProductCard.vue)
-- Pages: PascalCase (Products/Index.vue)
-- Props: camelCase
-- Classes: PascalCase
-
-### **2. File Organization**
-- Group by feature, not by type
-- Good: `Components/Products/ProductCard.vue`, `Components/Products/ProductForm.vue`
-- Avoid: `Components/Cards/ProductCard.vue`, `Components/Forms/ProductForm.vue`
-
-### **3. Props & Emits**
-```vue
-<script setup>
-const props = defineProps({
-  modelValue: String,
-  disabled: Boolean
-})
-
-const emit = defineEmits(['update:modelValue'])
-</script>
-```
-
-### **4. Styling**
-- Use Tailwind utilities primarily
-- Avoid inline styles
-- Custom CSS in `<style scoped>` untuk component-specific styles
-- Follow Tailwind's responsive patterns (sm:, md:, lg:)
-
-### **5. API Calls (Inertia)**
-- Gunakan `route()` helper untuk URL generation
-- Tidak perlu fetch/axios untuk standard CRUD (gunakan inertia form)
-- Untuk API requests khusus, gunakan axios dari dependencies
-
-### **6. Authentication**
-- Use `auth()` helper di controller untuk current user
-- Frontend: Import `usePage` dari Inertia untuk accessing props
-- Middleware: `auth`, `verified`, `guest` sudah tersedia
-
-### **7. Database Relationships**
-```php
-// app/Models/User.php
-class User extends Model {
-    public function posts() {
-        return $this->hasMany(Post::class);
-    }
-}
-```
-
-### **8. Validation**
-```php
-// Di controller atau FormRequest
-$validated = request()->validate([
-    'name' => 'required|string|max:255',
-    'email' => 'required|email|unique:users'
-]);
-```
-
-## COMMON TASKS & SOLUTIONS
-
-### **Add New Database Table**
-```bash
-php artisan make:migration create_products_table
-# Edit database/migrations/[timestamp]_create_products_table.php
-php artisan migrate
-```
-
-### **Add Authentication to Route**
-```php
-Route::get('/dashboard', [DashboardController::class, 'show'])
-    ->middleware('auth')
-    ->name('dashboard');
-```
-
-### **Use Tailwind Custom Colors**
-Edit `tailwind.config.js`:
-```js
-theme: {
-  extend: {
-    colors: {
-      primary: '#your-color'
-    }
-  }
-}
-```
-
-### **Add Dark Mode Support**
-Tailwind already configured. Use `dark:` prefix:
-```html
-<div class="bg-white dark:bg-black">Content</div>
-```
-
-### **Redirect After Form Submission**
-```php
-return redirect()->route('dashboard')
-    ->with('success', 'Profile updated!');
-```
-
-## FILE LOCATION QUICK REFERENCE
-
-| Task | Location |
-|------|----------|
-| Create user-facing page | `resources/js/Pages/` |
-| Add reusable component | `resources/js/Components/` |
-| Write business logic | `app/Http/Controllers/` |
-| Define database table | `database/migrations/` |
-| Add URL route | `routes/web.php` |
-| Global styles | `resources/css/app.css` |
-| Environment variables | `.env` file |
-| Database model | `app/Models/` |
-| Form validation | `app/Http/Requests/` |
-
-## TESTING
-
-Template include test structure:
-```bash
-# Run all tests
-php artisan test
-
-# Run specific test
-php artisan test tests/Feature/Auth/AuthenticationTest.php
-```
-
-Tests located di `tests/Feature/` dan `tests/Unit/`
-
-## IMPORTANT NOTES & GOTCHAS
-
-1. **Inertia Response Format:**
-   - Always return `inertia('PageName', $props)` from controller
-   - Props automatically available di Vue template
-
-2. **Asset Compilation:**
-   - Run `npm run dev` di development
-   - Run `npm run build` sebelum deployment
-   - Assets automatically versioned di production
-
-3. **Database Migrations:**
-   - Always create migrations untuk schema changes
-   - Never modify existing migrations
-   - Run `php artisan migrate:rollback` untuk undo
-
-4. **Environment Variables:**
-   - Copy `.env.example` ke `.env`
-   - Generate `APP_KEY`: `php artisan key:generate`
-   - Secrets like DB passwords di `.env` (not in version control)
-
-5. **CSRF Protection:**
-   - Built-in dengan Inertia forms
-   - Included automatically di POST/PUT/PATCH requests
-
-6. **Component Scope:**
-   - Shadcn components di `resources/js/Components/ui/` adalah template read-only
-   - Modify copy-nya jika perlu customize
-   - Jangan edit dari node_modules
-
-7. **Hot Module Replacement (HMR):**
-   - Vite dev server auto-refresh on file changes
-   - Jika tidak work: restart `npm run dev`
-   - Check browser console untuk errors
-
-## SCALING CONSIDERATIONS
-
-Untuk aplikasi yang lebih complex:
-
-- **State Management:** Gunakan Pinia untuk global state
-- **API Routes:** Tambah `routes/api.php` untuk REST API
-- **Services:** Extract business logic ke `app/Services/`
-- **Jobs & Queues:** Untuk async tasks
-- **Caching:** Gunakan Redis untuk session/caching
-- **Testing:** Expand test coverage dengan factories & seeders
-
-## USEFUL COMMANDS
-
-```bash
-# Laravel Commands
-php artisan tinker                    # Interactive shell
-php artisan make:controller ControllerName
-php artisan make:model ModelName -m   # Model + migration
-php artisan make:migration create_table_name
-php artisan migrate:refresh           # Reset & migrate
-php artisan db:seed                   # Seed database
-
-# Node Commands
-npm install [package-name]            # Add npm package
-npm run dev                           # Development server
-npm run build                         # Production build
-
-# Useful shortcuts
-php artisan serve --port=8001         # Run on different port
-npm run build -- --watch              # Watch mode for build
-```
-
+---
+name: kpi-web-go4t
+description: Panduan mengerjakan aplikasi KPI Web Go4T (Laravel 13 + Inertia 2 + Vue 3 + shadcn-vue) — tracking task/status agent, penilaian KPI karyawan, pusat data akun agent. Gunakan saat menambah fitur agent/task/KPI/dashboard/user-role, migration & model, login password + OTP email, chart dashboard, atau deploy ke cPanel.
 ---
 
-**Versi Template:** 1.0  
-**Last Updated:** 2024  
-**Compatibility:** Laravel 11+, Vue 3, Tailwind CSS 3, Vite 4+
+# KPI WEB GO4T
 
-## STRUCTURE
+## OVERVIEW
 
+Aplikasi internal Go4T untuk **tracking task harian agent**, **status agent**, **penilaian KPI karyawan**, dan **pusat data akun agent** (identifier + password per platform yang bisa dilihat/di-copy).
+
+| Layer | Pilihan |
+|-------|---------|
+| Backend | Laravel 13.14, PHP 8.4 (fitur native dulu: Form Request, middleware, Scheduler, Mail) |
+| Bridge | Inertia 2.0.24 — **tanpa REST API** (monolith), `HandleInertiaRequests` share `auth.user` |
+| Frontend | Vue 3 Composition API `<script setup>`, JS (bukan TS), Vite 7 |
+| UI | shadcn-vue (Reka UI) + `@lucide/vue`, komponen di `resources/js/Components/ui` |
+| Style | **Tailwind murni** (v3), atomic, warisi dari parent |
+| Chart | `chart.js` + `vue-chartjs` — **satu-satunya dependency baru** yg boleh ditambah |
+| DB | MariaDB 10.6, `utf8mb4_unicode_ci`, InnoDB, migration = source of truth |
+| Mail | SMTP cPanel (OTP + reset password), `QUEUE_CONNECTION=sync` |
+| Hosting | cPanel, PHP 8.4.26, `APP_TIMEZONE=Asia/Jakarta`, build frontend **lokal** |
+
+Dokumen sumber (dibaca sebelum kerja besar): `plan.md`, `ketentuan.md`, `step-by-step-id.md`, `specs-laravel.md`, `specs-environment.md`, `concept-kpi-web.md`, `concept.drawio.xml`.
+
+Tiga role: `admin`, `user`, `auditor`.
+
+## WHEN TO USE
+
+Gunakan skill ini ketika:
+
+- Menambah/mengubah fitur di project KPI Web: agent, agent account, platform, task, KPI, dashboard, user/role, auth (password/OTP).
+- Membuat migration, model, cast, enum, Form Request, controller, komponen Vue, atau chart di project ini.
+- Pertanyaan tentang formula KPI, level/target, atau periode penilaian.
+- Deploy / troubleshooting di cPanel–MariaDB.
+
+**Jangan pakai** untuk project Laravel lain atau stack berbeda — keputusan di bawah terikat ke project ini.
+
+## PROCESS
+
+### 0. Sebelum mulai
+
+1. Baca `plan.md` (otoritatif) + dokumen sumber yg relevan; jangan berasumsi dari template lama.
+2. Cek state nyata repo (`app/`, `routes/web.php`, `resources/js/Pages/`, `config/kpi.php`) sebelum mengklaim sesuatu sudah ada.
+3. Tulis asumsi eksplisit bila requirement ambigu; berhenti dan tanya kalau bertentangan dengan plan.
+
+### 1. Urutan kerja tiap fitur (wajib, tidak boleh lompat)
+
+```text
+route → controller → model → migration → test tinker → frontend sederhana (tanpa style) → test → styling → DONE
 ```
-laravel-inertia-vue-template
- ┣ app
- ┃ ┣ Http
- ┃ ┃ ┣ Controllers
- ┃ ┃ ┃ ┣ Auth
- ┃ ┃ ┃ ┃ ┣ AuthenticatedSessionController.php
- ┃ ┃ ┃ ┃ ┣ ConfirmablePasswordController.php
- ┃ ┃ ┃ ┃ ┣ EmailVerificationNotificationController.php
- ┃ ┃ ┃ ┃ ┣ EmailVerificationPromptController.php
- ┃ ┃ ┃ ┃ ┣ NewPasswordController.php
- ┃ ┃ ┃ ┃ ┣ PasswordController.php
- ┃ ┃ ┃ ┃ ┣ PasswordResetLinkController.php
- ┃ ┃ ┃ ┃ ┣ RegisteredUserController.php
- ┃ ┃ ┃ ┃ ┗ VerifyEmailController.php
- ┃ ┃ ┃ ┣ Controller.php
- ┃ ┃ ┃ ┗ ProfileController.php
- ┃ ┃ ┣ Middleware
- ┃ ┃ ┃ ┗ HandleInertiaRequests.php
- ┃ ┃ ┗ Requests
- ┃ ┃ ┃ ┣ Auth
- ┃ ┃ ┃ ┃ ┗ LoginRequest.php
- ┃ ┃ ┃ ┗ ProfileUpdateRequest.php
- ┃ ┣ Models
- ┃ ┃ ┗ User.php
- ┃ ┗ Providers
- ┃ ┃ ┗ AppServiceProvider.php
- ┣ bootstrap
- ┃ ┣ cache
- ┃ ┃ ┣ .gitignore
- ┃ ┃ ┣ packages.php
- ┃ ┃ ┗ services.php
- ┃ ┣ app.php
- ┃ ┗ providers.php
- ┣ config
- ┃ ┣ app.php
- ┃ ┣ auth.php
- ┃ ┣ cache.php
- ┃ ┣ database.php
- ┃ ┣ filesystems.php
- ┃ ┣ logging.php
- ┃ ┣ mail.php
- ┃ ┣ queue.php
- ┃ ┣ services.php
- ┃ ┗ session.php
- ┣ database
- ┃ ┣ factories
- ┃ ┃ ┗ UserFactory.php
- ┃ ┣ migrations
- ┃ ┃ ┣ 0001_01_01_000000_create_users_table.php
- ┃ ┃ ┣ 0001_01_01_000001_create_cache_table.php
- ┃ ┃ ┗ 0001_01_01_000002_create_jobs_table.php
- ┃ ┣ seeders
- ┃ ┃ ┗ DatabaseSeeder.php
- ┣ public
- ┃ ┣ build
- ┃ ┣ .htaccess
- ┃ ┣ favicon.ico
- ┃ ┣ hot
- ┃ ┣ index.php
- ┃ ┗ robots.txt
- ┣ resources
- ┃ ┣ css
- ┃ ┃ ┗ app.css
- ┃ ┣ js
- ┃ ┃ ┣ Components
- ┃ ┃ ┃ ┣ ui
- ┃ ┃ ┃ ┃ ┣ button
- ┃ ┃ ┃ ┃ ┃ ┣ Button.vue
- ┃ ┃ ┃ ┃ ┃ ┗ index.js
- ┃ ┃ ┃ ┃ ┗ card
- ┃ ┃ ┃ ┃ ┃ ┣ Card.vue
- ┃ ┃ ┃ ┃ ┃ ┣ CardAction.vue
- ┃ ┃ ┃ ┃ ┃ ┣ CardContent.vue
- ┃ ┃ ┃ ┃ ┃ ┣ CardDescription.vue
- ┃ ┃ ┃ ┃ ┃ ┣ CardFooter.vue
- ┃ ┃ ┃ ┃ ┃ ┣ CardHeader.vue
- ┃ ┃ ┃ ┃ ┃ ┣ CardTitle.vue
- ┃ ┃ ┃ ┃ ┃ ┗ index.js
- ┃ ┃ ┃ ┣ ApplicationLogo.vue
- ┃ ┃ ┃ ┣ Checkbox.vue
- ┃ ┃ ┃ ┣ DangerButton.vue
- ┃ ┃ ┃ ┣ Dropdown.vue
- ┃ ┃ ┃ ┣ DropdownLink.vue
- ┃ ┃ ┃ ┣ InputError.vue
- ┃ ┃ ┃ ┣ InputLabel.vue
- ┃ ┃ ┃ ┣ Modal.vue
- ┃ ┃ ┃ ┣ NavLink.vue
- ┃ ┃ ┃ ┣ PrimaryButton.vue
- ┃ ┃ ┃ ┣ ResponsiveNavLink.vue
- ┃ ┃ ┃ ┣ SecondaryButton.vue
- ┃ ┃ ┃ ┗ TextInput.vue
- ┃ ┃ ┣ Layouts
- ┃ ┃ ┃ ┣ AuthenticatedLayout.vue
- ┃ ┃ ┃ ┗ GuestLayout.vue
- ┃ ┃ ┣ lib
- ┃ ┃ ┃ ┗ utils.js
- ┃ ┃ ┣ Pages
- ┃ ┃ ┃ ┣ Auth
- ┃ ┃ ┃ ┃ ┣ ConfirmPassword.vue
- ┃ ┃ ┃ ┃ ┣ ForgotPassword.vue
- ┃ ┃ ┃ ┃ ┣ Login.vue
- ┃ ┃ ┃ ┃ ┣ Register.vue
- ┃ ┃ ┃ ┃ ┣ ResetPassword.vue
- ┃ ┃ ┃ ┃ ┗ VerifyEmail.vue
- ┃ ┃ ┃ ┣ Profile
- ┃ ┃ ┃ ┃ ┣ Partials
- ┃ ┃ ┃ ┃ ┃ ┣ DeleteUserForm.vue
- ┃ ┃ ┃ ┃ ┃ ┣ UpdatePasswordForm.vue
- ┃ ┃ ┃ ┃ ┃ ┗ UpdateProfileInformationForm.vue
- ┃ ┃ ┃ ┃ ┗ Edit.vue
- ┃ ┃ ┃ ┣ Dashboard.vue
- ┃ ┃ ┃ ┗ Welcome.vue
- ┃ ┃ ┣ app.js
- ┃ ┃ ┗ bootstrap.js
- ┃ ┗ views
- ┃ ┃ ┗ app.blade.php
- ┣ routes
- ┃ ┣ auth.php
- ┃ ┣ console.php
- ┃ ┗ web.php
- ┣ storage
- ┣ tests
- ┃ ┣ Feature
- ┃ ┃ ┣ Auth
- ┃ ┃ ┃ ┣ AuthenticationTest.php
- ┃ ┃ ┃ ┣ EmailVerificationTest.php
- ┃ ┃ ┃ ┣ PasswordConfirmationTest.php
- ┃ ┃ ┃ ┣ PasswordResetTest.php
- ┃ ┃ ┃ ┣ PasswordUpdateTest.php
- ┃ ┃ ┃ ┗ RegistrationTest.php
- ┃ ┃ ┣ ExampleTest.php
- ┃ ┃ ┗ ProfileTest.php
- ┃ ┣ Unit
- ┃ ┃ ┗ ExampleTest.php
- ┃ ┗ TestCase.php
- ┣ vendor
- ┣ .editorconfig
- ┣ .env
- ┣ .env.example
- ┣ .gitattributes
- ┣ .gitignore
- ┣ artisan
- ┣ components.json
- ┣ composer.json
- ┣ composer.lock
- ┣ jsconfig.json
- ┣ LICENSE
- ┣ package-lock.json
- ┣ package.json
- ┣ phpunit.xml
- ┣ postcss.config.js
- ┣ README.md
- ┣ SKILL.md
- ┣ tailwind.config.js
- ┗ vite.config.js
- ```
 
- ## Packages
+Tidak lanjut ke fitur berikutnya sebelum fitur sekarang lolos **Definition of Done** (lihat bagian Verification).
 
- ```json
+### 2. Roadmap fase
 
- {
-    "$schema": "https://www.schemastore.org/package.json",
-    "private": true,
-    "type": "module",
-    "scripts": {
-        "build": "vite build",
-        "dev": "vite"
-    },
-    "devDependencies": {
-        "@inertiajs/vue3": "^2.0.0",
-        "@tailwindcss/forms": "^0.5.3",
-        "@tailwindcss/vite": "^4.0.0",
-        "@vitejs/plugin-vue": "^6.0.0",
-        "autoprefixer": "^10.4.12",
-        "axios": "^1.11.0",
-        "concurrently": "^9.0.1",
-        "laravel-vite-plugin": "^2.0.0",
-        "postcss": "^8.4.31",
-        "tailwindcss": "^3.2.1",
-        "tw-animate-css": "^1.4.0",
-        "vite": "^7.0.7",
-        "vue": "^3.4.0"
-    },
-    "dependencies": {
-        "@lucide/vue": "^1.17.0",
-        "class-variance-authority": "^0.7.1",
-        "clsx": "^2.1.1",
-        "reka-ui": "^2.9.9",
-        "tailwind-merge": "^3.6.0"
+| Fase | Isi | DoD kunci |
+|------|-----|-----------|
+| F0 | Bersih-bersih template: Tailwind tetap v3 (hapus `@tailwindcss/vite`), Ziggy aktif (`@routes` di `app.blade.php`), `.env` lokal + `APP_TIMEZONE=Asia/Jakarta`, hapus route/halaman `register` + `verify-email`, branch `main`/`develop`/`feature/*` | `php artisan test` hijau, `npm run build` sukses, login tampil |
+| F1 | Database foundation: modif `users` (role, is_active), `platforms`, `agents`, `agent_accounts`, `tasks`; model + relasi + cast (`encrypted`, enum) + Factory + Seeder | `php artisan migrate:fresh --seed` jalan; relasi sesuai ERD |
+| F2 | Auth + role + `UserController` (admin kelola akun = use case REGISTER); middleware `EnsureRole` + alias; login password (cek `is_active`) + OTP | guest ditolak, role salah 403, OTP salah/expired/dipakai-ulang ditolak, throttle aktif; deploy staging awal + SMTP nyata + cron |
+| F3 | CRUD agent + profile: `AgentController` (store/update/destroy/show), Form Request, `agent_accounts` ikut form, upload avatar (`image\|mimes:jpg,jpeg,png,webp\|max:2048`) | admin/user CRUD ok, auditor 403 saat mutasi, password tidak bocor di response list |
+| F4 | Input task: `TaskController` + Form Request, filter tanggal/karyawan/agent/platform, pagination | task tersimpan lengkap; filter + pagination jalan |
+| F5 | KPI (inti risiko, **dikerjakan sebelum dashboard**): `config/kpi.php` → `KpiCalculator` → tinker lawan sheet → test | angka identik dengan sheet untuk data uji sama; admin + auditor bisa, user 403 |
+| F6 | Dashboard: 3 agregat chart, tabel agent (search/filter/sort A-Z/paginate), sel platform (identifier + copy + donut), ringkasan task per periode | angka chart cocok dengan query manual tinker; tidak ada N+1 (cek query log) |
+| F7 | Responsive (desktop/tablet/mobile), empty/loading/error state, security review, performance, test integrasi per role | 3 breakpoint ok, tanpa `dd()`/`dump()`, `APP_DEBUG=false` |
+| F8 | Production: backup DB → `git pull` → `composer install --no-dev -o` → upload `public/build` → `php artisan migrate --force` → `php artisan optimize` | login 2 metode, OTP mail, dashboard, KPI, upload, log, HTTPS, cron ok; backup+restore dites |
+
+### 3. Keputusan mengikat (jangan dilanggar)
+
+- **Tanpa REST API** — semua lewat Inertia page/controller.
+- **Tailwind murni**: tidak ada custom CSS, `<style>`, `<style scoped>`, atau inline style.
+- **Tailwind tetap v3** (selaras `tailwind.config.js` + `components.json`); `@tailwindcss/vite` (v4) tidak dipakai.
+- Chart hanya lewat `chart.js` + `vue-chartjs`, dibungkus komponen reusable.
+- **Enum**: PHP backed enum (`app/Enums`), kolom DB `string` (bukan kolom `enum`).
+- **Password agent** pakai cast `'password' => 'encrypted'` (harus bisa ditampilkan + di-copy) — **jangan** `Hash::make`, dan **jangan ganti `APP_KEY` di production** setelah ada data (semua password agent jadi tidak terbaca).
+- **Register hanya oleh admin**; route public register + email verification dihapus; route `dashboard` **tanpa** middleware `verified`.
+- Route detail agent wajib `->whereNumber('agent')`, kalau tidak `/agents/create` ketangkap `{agent}`.
+- `agents.index` tidak ada — daftar agent = tabel di dashboard.
+- Target & status KPI di `config/kpi.php`, bukan hardcode di Vue.
+- KPI dihitung **di backend oleh 1 service** (`KpiCalculator`), meniru formula Google Sheets.
+- `QUEUE_CONNECTION=sync` (cPanel tidak menjamin worker); OTP dikirim langsung, bukan queue.
+- Build frontend **lokal**, `public/build` di-upload (Node tidak dijamin ada di cPanel).
+
+### 4. Role & permission
+
+| Fitur | Admin | User | Auditor |
+|-------|:-----:|:----:|:-------:|
+| Login (password / OTP) | ✔ | ✔ | ✔ |
+| Kelola user (register akun) | ✔ | – | – |
+| Dashboard | ✔ | ✔ | ✔ |
+| Lihat profile agent | ✔ | ✔ | ✔ |
+| CRUD agent | ✔ | ✔ | – |
+| Input / edit task | ✔ | ✔ | – |
+| KPI | ✔ | – | ✔ |
+
+`dashboard → CRUD agent → profile agent` bertipe `<<extend>>`: tombol `+ add` dan `edit` ada **di dalam** dashboard sebagai popup, bukan page terpisah.
+
+Role `user` = karyawan lain yg butuh data akun platform: hanya boleh **melihat** data platform, copy `email`/`id`, dan melihat detail agent (nama, alamat, koordinat, deskripsi, email recovery, device, dll). Dia sendiri juga karyawan yg dinilai KPI, tapi **tidak bisa** membuka halaman KPI.
+
+Authorization selalu **di backend** (middleware `role:` + validasi); menyembunyikan tombol di frontend cuma untuk UX.
+
+### 5. Route & middleware
+
+Page: `Auth/Login` `/login` (tab Password / Email OTP), `Auth/OtpVerify` `/login/otp`, `Dashboard` `/dashboard`, `Kpi/Index` `/kpi`, `Tasks/Index` `/tasks`, `Users/Index` `/users`, `Profile/Edit` `/profile`. `/` redirect ke `/dashboard`.
+
+```php
+<?php
+
+use App\Http\Controllers\AgentController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KpiController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
+
+Route::redirect('/', '/dashboard');
+
+// semua role
+Route::middleware(['auth', 'role:admin,user,auditor'])->group(function () {
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    // whereNumber wajib, kalo ngga /agents/create ketangkep {agent}
+    Route::get('/agents/{agent}', [AgentController::class, 'show'])
+        ->whereNumber('agent')->name('agents.show');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+});
+
+// admin + user
+Route::middleware(['auth', 'role:admin,user'])->group(function () {
+    Route::resource('agents', AgentController::class)->except(['index', 'show']);
+    Route::resource('tasks', TaskController::class)->except(['show']);
+});
+
+// admin + auditor
+Route::middleware(['auth', 'role:admin,auditor'])
+    ->get('/kpi', [KpiController::class, 'index'])->name('kpi.index');
+
+// admin only
+Route::middleware(['auth', 'role:admin'])
+    ->resource('users', UserController::class)->except(['show']);
+
+require __DIR__.'/auth.php';
+```
+
+Alias middleware di `bootstrap/app.php`: `$middleware->alias(['role' => EnsureRole::class]);`, dan:
+
+```php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class EnsureRole
+{
+    public function handle(Request $request, Closure $next, string ...$roles): Response
+    {
+        $role = $request->user()?->role?->value;
+
+        abort_unless(in_array($role, $roles, true), 403);
+
+        return $next($request);
     }
 }
+```
 
+### 6. Skema database
+
+```mermaid
+erDiagram
+    users ||--o{ tasks : "PIC"
+    agents ||--o{ tasks : has
+    platforms ||--o{ tasks : on
+    agents ||--o{ agent_accounts : has
+    platforms ||--o{ agent_accounts : on
+    users ||--o{ login_otps : "by email"
+```
+
+- `users`: + `role` string (`admin|user|auditor`, default `user`), `is_active` bool default true. Hapus `email_verified_at` kalo tidak dipakai.
+- `agents`: `name`, `avatar_path`, `email`, `recovery_email`, `password` (**encrypted**), `birth_date`, `address`, `latitude`/`longitude` decimal(10,7), `job`, `hobby`, `context`, `device_user`, `device_number`, `device_released_at`, `created_by`. Index `name`, `email`.
+- `platforms`: `slug` unique, `name`, `is_kpi` bool, `sort`. Seed 7: `google`, `youtube`, `facebook`, `instagram`, `x`, `tiktok`, `pinterest`.
+- `agent_accounts`: `agent_id` (cascade), `platform_id`, `identifier`, `password` (encrypted, null). Unique (`agent_id`, `platform_id`).
+- `tasks`: `task_date` date, `user_id` (PIC), `agent_id`, `platform_id`, `status` (`registered|logged_in|trouble|recovered`), `task_status` (`ongoing|done|pending`), `note`. Index (`user_id`,`task_date`), (`agent_id`,`platform_id`). **Tanpa unique** — duplikat dinetralkan oleh `COUNT(DISTINCT)`.
+- `login_otps`: `email` index, `code_hash`, `expires_at`, `attempts` default 0, `used_at`, `created_at`.
+- Tabel template (`sessions`, `cache`, `jobs`, `password_reset_tokens`) dibiarkan.
+
+Enum PHP: `Role` (Admin, User, Auditor), `TaskStatus` (Registered, LoggedIn), `TaskProgress` (Todo, Progress, Done).
+
+### 7. Logika KPI
+
+Terjemahan formula Sheets (`B`=karyawan, `C`=agent, `D`=platform, `E`=status, `F`=status task):
+
+| Formula Sheets | Arti | Di app |
+|----------------|------|--------|
+| `UNIQUE(FILTER(C; C<>""; B=A5))` | agent unik milik karyawan | `GROUP BY agent_id` per `user_id` |
+| `E ∈ {Registered, Logged in}` | status yg dihitung | `status IN (registered, logged_in)` |
+| `F = "Done"` | task selesai | `task_status = done` |
+| `D ∈ 7 platform` | hanya platform KPI | `platform_id IN (platforms.is_kpi)` |
+| `COUNTUNIQUE(D) / 7` | porsi platform selesai per agent | `COUNT(DISTINCT platform_id) / jml platform KPI` |
+| `ROUND(SUM(...); 2)` | total "agent setara penuh" | `round(sum, 2)` |
+| `IF(jml=0; ""; jml)` | kosong kalo 0 | `null` |
+
+`COUNTUNIQUE` dihitung atas **seluruh rentang periode**, bukan per hari: platform sama (Registered Senin, Logged in Selasa) cuma terhitung 1 — perilaku formula asli, dipertahankan.
+
+Target per hari = 1 agent full registrasi semua platform:
+
+```text
+rata_per_hari = jml / jumlah_hari_periode
+level         = excellent jika >= 1,33 | better jika >= 1,25 | baseline jika >= 1,00 | below (< 1,00 atau null)
+```
+
+Hari dihitung: kalau karyawan input di hari itu, hari dihitung; kalau tidak/null tidak dihitung.
+
+`config/kpi.php`:
+
+```php
+<?php
+
+return [
+    'baseline'  => 1.00,
+    'better'    => 1.25,
+    'excellent' => 1.33,
+    'statuses'  => ['registered', 'logged_in'], // status yg dihitung
+    'done'      => 'done',
+];
+```
+
+`app/Services/KpiCalculator.php` (satu-satunya service; dipakai halaman KPI, dashboard, dan test):
+
+```php
+<?php
+
+namespace App\Services;
+
+use App\Models\Platform;
+use App\Models\Task;
+use Carbon\CarbonInterface;
+
+class KpiCalculator
+{
+    // = formula sheet: SUM(platform unik Done per agent / jml platform KPI)
+    public function score(int $userId, CarbonInterface $from, CarbonInterface $to): ?float
+    {
+        $platformIds = Platform::where('is_kpi', true)->pluck('id');
+
+        if ($platformIds->isEmpty()) {
+            return null;
+        }
+
+        $perAgent = Task::query()
+            ->where('user_id', $userId)
+            ->whereBetween('task_date', [$from->toDateString(), $to->toDateString()])
+            ->whereIn('status', config('kpi.statuses'))
+            ->where('task_status', config('kpi.done'))
+            ->whereIn('platform_id', $platformIds)
+            ->selectRaw('agent_id, COUNT(DISTINCT platform_id) AS done_platforms')
+            ->groupBy('agent_id')
+            ->pluck('done_platforms');
+
+        $jml = round($perAgent->sum() / $platformIds->count(), 2);
+
+        return $jml > 0 ? $jml : null; // null = "" di sheet
+    }
+
+    // rata-rata per hari -> level
+    public function level(?float $jml, int $days): string
+    {
+        $avg = ($jml ?? 0) / max($days, 1);
+
+        return match (true) {
+            $avg >= config('kpi.excellent') => 'excellent',
+            $avg >= config('kpi.better')    => 'better',
+            $avg >= config('kpi.baseline')  => 'baseline',
+            default                         => 'below',
+        };
+    }
+}
+```
+
+Verifikasi dulu di tinker (sebelum bikin UI) dan cocokkan dengan sheet pakai data sama (export `TASK` → CSV → import ke `tasks`):
+
+```php
+use App\Services\KpiCalculator;
+use Carbon\Carbon;
+
+$kpi = app(KpiCalculator::class);
+$jml = $kpi->score(1, Carbon::parse('2026-10-01'), Carbon::parse('2026-10-31'));
+$kpi->level($jml, 22);
+```
+
+Chart dashboard = jumlah tiap platform per status: hari ini, bulan ini (tgl 1 → sekarang), semua. Donut "100%" diambil dari kelengkapan 7 platform yg berstatus `logged in`.
+
+### 8. Autentikasi
+
+Login password pakai `LoginRequest` + `AuthenticatedSessionController` dari template (rate limit 5x) + cek `is_active`.
+
+OTP email:
+
+```text
+/login (tab OTP) → input email
+   ↓ POST /login/otp/send   (throttle)
+generate 6 digit → simpan HASH di login_otps (exp 10 menit) → kirim mail (sync)
+   ↓ redirect /login/otp
+input kode → POST /login/otp/verify
+cek: belum expired, attempts < 5, hash cocok, used_at null
+   ↓
+Auth::login($user) + tandai used_at + regenerate session
+```
+
+- Respons `send` **selalu sama** baik email terdaftar atau tidak (anti user enumeration).
+- Kode ter-hash, sekali pakai, max 5x salah, throttle per email + IP (pola `RateLimiter` seperti `LoginRequest`).
+- File: `Auth/OtpLoginController`, `Requests/Auth/SendOtpRequest`, `Requests/Auth/VerifyOtpRequest`, `Models/LoginOtp`, `Mail/LoginOtpMail`, migration `login_otps`. Bersihkan OTP expired harian lewat scheduler.
+
+### 9. Konvensi kode
+
+**Comment**: singkat, pakai singkatan "yg"/"jd". Tulis "cuy" hanya untuk hal penting yg harus diperhatikan.
+
+**Frontend**:
+1. Komponen umum di `Components/Common`, komponen domain di `Components/{Fitur}`.
+2. Tailwind atomic, warisi dari parent (warna/ukuran teks di wrapper, anak tidak mengulang).
+3. Objek data di **atas** `<script setup>`, dipisah dari template.
+4. Tanpa custom CSS / `<style>` / inline style.
+5. Mobile-first (`sm:`, `md:`, `lg:`); tabel lebar di container `overflow-x-auto`, sidebar jadi drawer di mobile.
+6. Locator test/DOM: `data-testid` + `aria-label` (bukan class / selector yg gampang berubah).
+
+```vue
+<script setup>
+import { ref } from 'vue'
+import { Check, Copy } from '@lucide/vue'
+
+// objek data di atas
+const props = defineProps({
+    value: { type: String, required: true },
+    label: { type: String, required: true },
+})
+const copied = ref(false)
+
+const copy = async () => {
+    await navigator.clipboard.writeText(props.value) // butuh HTTPS cuy
+    copied.value = true
+    setTimeout(() => (copied.value = false), 1500)
+}
+</script>
+
+<template>
+    <button
+        type="button"
+        :data-testid="`copy-${label}`"
+        :aria-label="`Salin ${label}`"
+        class="inline-flex size-6 items-center justify-center rounded text-neutral-500 hover:text-neutral-900"
+        @click="copy"
+    >
+        <component :is="copied ? Check : Copy" class="size-4" />
+    </button>
+</template>
+```
+
+**Backend**:
+- Controller tipis: Form Request → authorize → panggil logic → return Inertia.
+- Service hanya `KpiCalculator` (+ query agregat dashboard kalo controller jadi gemuk). CRUD sederhana tanpa Service/Repository.
+- Tiap snippet solusi wajib lengkap dengan `use`/namespace, tidak setengah-setengah.
+- Eager loading (`with('accounts.platform')`) di list agent untuk hindari N+1.
+
+**Struktur target**:
+
+```text
+app/
+├── Enums/                 Role, TaskStatus, TaskProgress
+├── Http/
+│   ├── Controllers/       Auth/ (+OtpLoginController), Agent, AgentAccount, Dashboard, Kpi, Task, User
+│   ├── Middleware/        HandleInertiaRequests, EnsureRole
+│   └── Requests/          Agent/, Task/, User/, Auth/
+├── Mail/LoginOtpMail.php
+├── Models/                User, Agent, Platform, AgentAccount, Task, LoginOtp
+└── Services/KpiCalculator.php
+config/kpi.php
+resources/js/
+├── Components/
+│   ├── ui/                shadcn
+│   ├── Common/            CopyButton, DataTable, ChartDonut, ChartLine, ChartBar, ConfirmDialog
+│   ├── Agents/            AgentTable, AgentProfileDialog, AgentFormDialog
+│   └── Kpi/               KpiScoreCard, KpiLevelBadge
+├── Layouts/               AuthenticatedLayout (sidebar), GuestLayout
+└── Pages/                 Auth/, Dashboard.vue, Kpi/, Tasks/, Users/, Profile/
+```
+
+### 10. Deploy cPanel
+
+Project di **luar** `public_html` (mis. `~/kpi-app`), docroot diarahkan ke folder `public`. `.env`: `APP_ENV=production`, `APP_DEBUG=false`, `APP_TIMEZONE=Asia/Jakarta` (batas "hari ini" bergantung ini), `SESSION_DRIVER=database`, `CACHE_STORE=database`, `QUEUE_CONNECTION=sync`. Cron: `* * * * * /usr/local/bin/php /home/USER/kpi-app/artisan schedule:run >> /dev/null 2>&1`. `php artisan storage:link` untuk avatar. HTTPS + redirect HTTP→HTTPS.
+
+Deploy: `git pull` → `composer install --no-dev -o` → upload `public/build` (hasil `npm run build` lokal) → `php artisan migrate --force` → `php artisan optimize`.
+
+## RATIONALIZATIONS
+
+| Alasan yg sering muncul | Jawaban |
+|------------------------|---------|
+| "Validasi cukup di controller, nggak perlu Form Request" | DoD mewajibkan validasi server via Form Request; ini juga yang bikin test role/validasi rapi. |
+| "Bikin REST API aja biar fleksibel dari mobile" | Plan menetapkan monolith Inertia tanpa REST API. API = scope baru + token + auth baru; tanya dulu sebelum menambah. |
+| "`<style scoped>` cuma buat 1 komponen ini" | Aturan Tailwind-only tidak ada pengecualian; inline style pun ditolak. |
+| "Hash aja password agent, lebih aman" | Password agent harus bisa ditampilkan dan di-copy (requirement). Pakai cast `encrypted`; hashing akan mematikan fitur copy. |
+| "Ganti `APP_KEY` di production karena dianggap bocor" | Semua password agent pakai `APP_KEY`; setelah diganti data lama tidak terbaca. Rotasi = migrasi re-encrypt, bukan ganti langsung. |
+| "Kolom `enum` di migration lebih rapi" | Plan pakai kolom `string` + PHP backed enum supaya perubahan nilai tidak perlu ALTER TABLE. |
+| "Kerjakan dashboard dulu, KPI belakangan (lebih keliatan hasilnya)" | KPI adalah inti risiko dan sumber angka dashboard/chart; kalau dibalik, agregat dashboard bisa salah arah. |
+| "OTP langsung saja, nggak perlu throttle/attempt" | Tanpa throttle OTP jadi jalur brute-force 6 digit. Wajib: hash, once-use, max 5x, throttle email+IP. |
+| "Test nanti aja setelah semua fitur jadi" | Tiap fase punya DoD + feature test; tinker (KPI, relasi, cast) dites sebelum UI dibangun. |
+| "Hari dihitung 22 hari kerja fix" | Pembagian hari mengikuti aturan: hari yang diinput karyawan dihitung, yang kosong tidak. Jangan hardcode asumsi. |
+| "Ubah `.env`/DB langsung di server karena cepat" | Migration = source of truth. Perubahan manual bikin staging/production divergen dan tidak bisa direview. |
+| "Skip `data-testid`, pakai class aja" | Selector class Tailwind gampang berubah; `data-testid` + `aria-label` yang dipakai untuk test/DOM. |
+
+## RED FLAGS
+
+- Muncul `<style>`, `<style scoped>`, custom CSS, atau inline style di komponen Vue.
+- Component Vue memuat angka target/level KPI (hardcode 1.25 / 1.33) — harus dari `config('kpi.*')`.
+- Perhitungan KPI/skor/level dilakukan di Vue (bukan `KpiCalculator`).
+- `Hash::make()` untuk `agents.password` / `agent_accounts.password`, atau password di-log / ikut ke response list.
+- Route publik `register` / `verify-email` masih ada, atau `dashboard` masih pakai middleware `verified`.
+- `agents.index` / halaman daftar agent terpisah dibuat (harusnya tabel di dashboard).
+- Route `/agents/{agent}` tanpa `whereNumber` (nanti `/agents/create` ketangkap sebagai `{agent}`).
+- Authorization hanya di frontend (tombol disembunyikan) tanpa cek backend.
+- `KpiController` diakses role `user` (harus 403), atau mutasi agent/task dengan role `auditor`.
+- Tabel dihitung tanpa `overflow-x-auto`, atau desain cuma dites di desktop.
+- `QUEUE_CONNECTION` bukan `sync` untuk pengiriman OTP, atau OTP dimasukkan queue.
+- Migration lama diedit/dihapus, atau kolom diubah langsung di DB tanpa migration.
+- `dd()` / `dump()` / `APP_DEBUG=true` tertinggal; kredensial agent atau `.env` ikut ter-commit.
+- Query list agent tanpa eager loading (`accounts.platform`) → N+1.
+- Dependency baru di luar `chart.js` / `vue-chartjs` tanpa persetujuan.
+
+## VERIFICATION
+
+Perintah:
+
+```bash
+php artisan test                                  # test hijau, tanpa regresi
+npm run build                                     # build sukses (dijalankan lokal)
+php artisan migrate:fresh --seed                  # schema + seeder jalan
+php artisan about                                 # cek versi PHP/DB di staging/production
+```
+
+Bukti angka (KPI): jalankan tinker §7 dengan data dari sheet, bandingkan `jml` + `level` dengan hasil sheet — selisih = bug, bukan "mendekati".
+
+Skenario test `KpiCalculator` yg wajib lulus:
+
+| Skenario | Ekspektasi |
+|----------|-----------|
+| 1 agent, 7 platform Done | `1.00` |
+| 1 agent, 3 platform Done | `0.43` |
+| Platform sama 2x (Registered lalu Logged in) | dihitung 1 |
+| `task_status` bukan Done | tidak dihitung |
+| Tidak ada task | `null` |
+| Task milik karyawan lain | tidak ikut |
+
+Test role (per fitur): guest ditolak, role salah → 403, OTP salah/expired/dipakai-ulang ditolak, throttle OTP aktif, auditor 403 saat mutasi agent/task, `user` 403 di `/kpi`.
+
+Definition of Done tiap fitur:
+
+```text
+[ ] Requirement terimplementasi
+[ ] Validasi server (Form Request)
+[ ] Authorization backend + test role
+[ ] Migration tersedia (tidak ubah DB manual)
+[ ] UI jalan: desktop, tablet, mobile
+[ ] Error / empty / loading state
+[ ] Feature test lulus (php artisan test)
+[ ] Manual test lulus
+[ ] Tidak ada regresi fitur sebelumnya
+[ ] Kompatibel env production (PHP 8.4, MariaDB 10.6, tanpa worker)
+[ ] Commit rapi, siap review
 ```
