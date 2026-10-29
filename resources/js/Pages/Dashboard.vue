@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { Head, usePage } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import ChartBar from '@/Components/Common/ChartBar.vue'
+import ChartArea from '@/Components/Common/ChartArea.vue'
 import Pagination from '@/Components/Common/Pagination.vue'
 import AgentFilters from '@/Components/Agents/AgentFilters.vue'
 import AgentTable from '@/Components/Agents/AgentTable.vue'
@@ -64,7 +64,7 @@ const closeEdit = (open) => {
             <!-- Section Chart (Stacked Bar) -->
             <section aria-label="Agent statistics per platform" class="grid gap-4 md:grid-cols-3">
                 <div v-for="c in chartCards" :key="c.key" class="rounded-lg border bg-white p-4">
-                    <ChartBar
+                    <ChartArea
                         :name="c.key"
                         :title="c.title"
                         :platforms="props.stats[c.key]"
