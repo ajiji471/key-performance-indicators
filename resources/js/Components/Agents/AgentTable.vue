@@ -52,7 +52,92 @@ const getPercentageColor = (percentage) => {
 </script>
 
 <template>
-    <div class="overflow-x-auto rounded-lg border bg-white">
+    <div class="flex flex-col gap-3 md:hidden">
+        <article
+            v-for="agent in agents"
+            :key="agent.id"
+            :data-testid="`agent-card-${agent.id}`"
+            class="rounded-lg border bg-white p-4"
+        >
+            <div class="flex items-start gap-3">
+                <img
+                    v-if="agent.avatar_url"
+                    :src="agent.avatar_url"
+                    :alt="`Avatar ${agent.name}`"
+                    class="size-10 shrink-0 rounded-full object-cover"
+                />
+                <div v-else class="flex size-10 shrink-0 items-center justify-center rounded-full bg-neutral-200 font-bold text-neutral-600">
+                    {{ agent.name.charAt(0).toUpperCase() }}
+                </div>
+
+                <div class="min-w-0 flex-1">
+                    <p class="truncate font-medium text-neutral-900">{{ agent.name }}</p>
+                    <p class="truncate text-xs text-neutral-500">Device : {{ agent.device_user || '-' }}</p>
+                    <p class="text-xs text-neutral-400">Created at: {{ agent.created_at ? new Date(agent.created_at + 'T00:00:00').toLocaleDateString('en-GB') : '-' }}</p>
+                </div>
+
+                <div class="flex shrink-0 items-center gap-1.5">
+                    <span class="size-1.5 rounded-full" :class="getPercentageColor(getStatusPercentage(agent)).replace('text-', 'bg-')" />
+                    <span class="font-mono text-sm font-medium" :class="getPercentageColor(getStatusPercentage(agent))">
+                        {{ getStatusPercentage(agent) }}%
+                    </span>
+                    <button
+                        v-if="canManage"
+                        type="button"
+                        :aria-label="`Edit profile ${agent.name}`"
+                        :data-testid="`agent-open-mobile-${agent.id}`"
+                        class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                        @click="emit('open', agent.id)"
+                    >
+                        <MoreVertical class="size-4" />
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center gap-1.5 border-t border-neutral-100 pt-3">
+                <div
+                    v-for="p in platforms"
+                    :key="p.id"
+                    class="group inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs"
+                    :class="getStatus(agent, p.slug)
+                        ? statusConfig[getStatus(agent, p.slug)].color
+                        : 'bg-neutral-50 text-neutral-500 border-neutral-200'"
+                    :title="getStatus(agent, p.slug)
+                        ? statusConfig[getStatus(agent, p.slug)].label
+                        : 'Not registered'"
+                    :aria-label="`${p.name}: ${getStatus(agent, p.slug) ? statusConfig[getStatus(agent, p.slug)].label : 'Not registered'}`"
+                    :data-testid="`agent-platform-mobile-${agent.id}-${p.slug}`"
+                >
+                    <span class="font-medium">{{ p.name }}</span>
+
+                    <component
+                        v-if="getStatus(agent, p.slug)"
+                        :is="statusConfig[getStatus(agent, p.slug)].icon"
+                        class="size-3.5 shrink-0"
+                    />
+
+                    <span
+                        v-if="getAgentPlatform(agent, p.slug)?.identifier"
+                        class="text-neutral-300 px-0.5"
+                    >|</span>
+
+                    <CopyButton
+                        v-if="getAgentPlatform(agent, p.slug)?.identifier"
+                        :value="getAgentPlatform(agent, p.slug).identifier"
+                        :label="`${p.name} ${agent.name}`"
+                        :test-id="`mobile-${p.slug}-${agent.id}`"
+                        class="shrink-0 size-2"
+                    />
+                </div>
+            </div>
+        </article>
+
+        <p v-if="!agents.length" class="py-8 text-center text-neutral-400">
+            No agents yet
+        </p>
+    </div>
+
+    <div class="hidden overflow-x-auto rounded-lg border bg-white md:block">
         <table class="w-full whitespace-nowrap text-left">
             <thead class="border-b bg-neutral-50 text-xs uppercase text-neutral-500">
                 <tr>
