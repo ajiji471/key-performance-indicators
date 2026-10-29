@@ -67,80 +67,62 @@ class DashboardTest extends TestCase
         }
     }
 
-    public function test_chart_today_dan_bulan_dihitung_dari_task(): void
+    public function test_chart_mengikuti_status_akun_untuk_semua_periode(): void
     {
         $platform = Platform::factory()->create();
 
-        $agent = Agent::factory()->create();
-        // status akun tidak boleh ikut chart today
-        $agent->accounts()->create([
-            'platform_id' => $platform->id,
-            'identifier'  => 'agent@example.com',
-            'status'      => AccountStatus::LoggedIn,
-        ]);
+        foreach ([AccountStatus::LoggedIn, AccountStatus::Registered, AccountStatus::Recovered, AccountStatus::Trouble] as $index => $status) {
+            Agent::factory()->create()->accounts()->create([
+                'platform_id' => $platform->id,
+                'identifier'  => "agent{$index}@example.com",
+                'status'      => $status,
+            ]);
+        }
 
-        $recovered = Agent::factory()->create();
-        $recovered->accounts()->create([
-            'platform_id' => $platform->id,
-            'identifier'  => 'recovered@example.com',
-            'status'      => AccountStatus::Recovered,
-        ]);
-
-        // dua task hari ini untuk agent yang sama dihitung sekali
-        Task::factory()->count(2)->create([
-            'agent_id'    => $agent->id,
+        // task tidak boleh ikut dihitung chart
+        Task::factory()->create([
             'platform_id' => $platform->id,
             'status'      => TaskStatus::Registered,
             'task_date'   => today()->toDateString(),
         ]);
 
-        // logged_in 40 hari lalu: masuk "semua" saja
-        Task::factory()->create([
-            'agent_id'    => $agent->id,
-            'platform_id' => $platform->id,
-            'status'      => TaskStatus::LoggedIn,
-            'task_date'   => today()->subDays(40)->toDateString(),
-        ]);
-
         $this->login(Role::Admin)
             ->get('/dashboard')
             ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.today.0.logged_in', 1)
                 ->where('stats.today.0.registered', 1)
-                ->where('stats.today.0.logged_in', 0)
-                ->where('stats.today.0.recovered', 0)
+                ->where('stats.today.0.recovered', 1)
+                ->where('stats.today.0.trouble', 1)
+                ->where('stats.month.0.logged_in', 1)
                 ->where('stats.month.0.registered', 1)
-                ->where('stats.month.0.logged_in', 0)
-                ->where('stats.all.0.registered', 1)
+                ->where('stats.month.0.recovered', 1)
+                ->where('stats.month.0.trouble', 1)
                 ->where('stats.all.0.logged_in', 1)
+                ->where('stats.all.0.registered', 1)
+                ->where('stats.all.0.recovered', 1)
+                ->where('stats.all.0.trouble', 1)
             );
     }
 
-    public function test_chart_today_kosong_tanpa_task_hari_ini(): void
+    public function test_chart_kosong_tanpa_akun_dan_tidak_memakai_task(): void
     {
         $platform = Platform::factory()->create();
-        $agent = Agent::factory()->create();
-
-        $agent->accounts()->create([
-            'platform_id' => $platform->id,
-            'identifier'  => 'agent@example.com',
-            'status'      => AccountStatus::LoggedIn,
-        ]);
 
         Task::factory()->create([
-            'agent_id'    => $agent->id,
             'platform_id' => $platform->id,
-            'status'      => TaskStatus::Registered,
-            'task_date'   => today()->subDay()->toDateString(),
+            'status'      => TaskStatus::LoggedIn,
+            'task_date'   => today()->toDateString(),
         ]);
 
         $this->login(Role::Admin)
             ->get('/dashboard')
             ->assertInertia(fn (Assert $page) => $page
-                ->where('stats.today.0.registered', 0)
                 ->where('stats.today.0.logged_in', 0)
+                ->where('stats.today.0.registered', 0)
                 ->where('stats.today.0.recovered', 0)
                 ->where('stats.today.0.trouble', 0)
-                ->where('stats.month.0.registered', 1)
+                ->where('stats.month.0.logged_in', 0)
+                ->where('stats.all.0.logged_in', 0)
             );
     }
 

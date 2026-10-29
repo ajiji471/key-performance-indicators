@@ -4,9 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\AccountStatus;
 use App\Models\Agent;
+use App\Models\AgentAccount;
 use App\Models\Platform;
-use App\Models\Task;
-use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -49,11 +48,13 @@ class DashboardController extends Controller
                 ])->values(),
             ]);
 
+        $stats = $this->countAccountsByPlatformAndStatus();
+
         return Inertia::render('Dashboard', [
             'stats' => [
-                'today' => $this->countByPlatformAndStatus(today(), today()),
-                'month' => $this->countByPlatformAndStatus(today()->startOfMonth(), today()->endOfMonth()),
-                'all'   => $this->countByPlatformAndStatus(),
+                'today' => $stats,
+                'month' => $stats,
+                'all'   => $stats,
             ],
             'agents'    => $agents,
             'platforms' => Platform::orderBy('sort')->get(['id', 'slug', 'name']),
@@ -61,11 +62,10 @@ class DashboardController extends Controller
         ]);
     }
 
-    // Hitung jumlah agent per platform per status dari task (month/all)
-    private function countByPlatformAndStatus(?CarbonInterface $from = null, ?CarbonInterface $to = null): array
+    // Hitung jumlah agent per platform per status dari status akun (snapshot)
+    private function countAccountsByPlatformAndStatus(): array
     {
-        $stats = Task::query()
-            ->when($from, fn ($q) => $q->whereBetween('task_date', [$from->toDateString(), $to->toDateString()]))
+        $stats = AgentAccount::query()
             ->selectRaw('platform_id, status, COUNT(DISTINCT agent_id) as total')
             ->groupBy('platform_id', 'status')
             ->get()
