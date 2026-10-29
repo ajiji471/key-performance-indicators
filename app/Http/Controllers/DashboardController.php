@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\AccountStatus;
 use App\Models\Agent;
-use App\Models\AgentAccount;
 use App\Models\Platform;
 use App\Models\Task;
 use Carbon\CarbonInterface;
@@ -52,8 +51,7 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard', [
             'stats' => [
-                // Today = snapshot status akun, sama dengan tabel
-                'today' => $this->countAccountsByPlatformAndStatus(),
+                'today' => $this->countByPlatformAndStatus(today(), today()),
                 'month' => $this->countByPlatformAndStatus(today()->startOfMonth(), today()->endOfMonth()),
                 'all'   => $this->countByPlatformAndStatus(),
             ],
@@ -68,18 +66,6 @@ class DashboardController extends Controller
     {
         $stats = Task::query()
             ->when($from, fn ($q) => $q->whereBetween('task_date', [$from->toDateString(), $to->toDateString()]))
-            ->selectRaw('platform_id, status, COUNT(DISTINCT agent_id) as total')
-            ->groupBy('platform_id', 'status')
-            ->get()
-            ->groupBy('platform_id');
-
-        return $this->platformStatusTotals($stats);
-    }
-
-    // Hitung jumlah agent per platform per status dari akun (today)
-    private function countAccountsByPlatformAndStatus(): array
-    {
-        $stats = AgentAccount::query()
             ->selectRaw('platform_id, status, COUNT(DISTINCT agent_id) as total')
             ->groupBy('platform_id', 'status')
             ->get()

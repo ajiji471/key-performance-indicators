@@ -67,11 +67,12 @@ class DashboardTest extends TestCase
         }
     }
 
-    public function test_chart_today_ikut_status_akun_dan_chart_bulan_dari_task(): void
+    public function test_chart_today_dan_bulan_dihitung_dari_task(): void
     {
         $platform = Platform::factory()->create();
 
         $agent = Agent::factory()->create();
+        // status akun tidak boleh ikut chart today
         $agent->accounts()->create([
             'platform_id' => $platform->id,
             'identifier'  => 'agent@example.com',
@@ -85,7 +86,7 @@ class DashboardTest extends TestCase
             'status'      => AccountStatus::Recovered,
         ]);
 
-        // task hari ini registered: dipakai month/all, bukan today
+        // dua task hari ini untuk agent yang sama dihitung sekali
         Task::factory()->count(2)->create([
             'agent_id'    => $agent->id,
             'platform_id' => $platform->id,
@@ -104,13 +105,42 @@ class DashboardTest extends TestCase
         $this->login(Role::Admin)
             ->get('/dashboard')
             ->assertInertia(fn (Assert $page) => $page
-                ->where('stats.today.0.logged_in', 1)
-                ->where('stats.today.0.recovered', 1)
-                ->where('stats.today.0.registered', 0)
+                ->where('stats.today.0.registered', 1)
+                ->where('stats.today.0.logged_in', 0)
+                ->where('stats.today.0.recovered', 0)
                 ->where('stats.month.0.registered', 1)
                 ->where('stats.month.0.logged_in', 0)
                 ->where('stats.all.0.registered', 1)
                 ->where('stats.all.0.logged_in', 1)
+            );
+    }
+
+    public function test_chart_today_kosong_tanpa_task_hari_ini(): void
+    {
+        $platform = Platform::factory()->create();
+        $agent = Agent::factory()->create();
+
+        $agent->accounts()->create([
+            'platform_id' => $platform->id,
+            'identifier'  => 'agent@example.com',
+            'status'      => AccountStatus::LoggedIn,
+        ]);
+
+        Task::factory()->create([
+            'agent_id'    => $agent->id,
+            'platform_id' => $platform->id,
+            'status'      => TaskStatus::Registered,
+            'task_date'   => today()->subDay()->toDateString(),
+        ]);
+
+        $this->login(Role::Admin)
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.today.0.registered', 0)
+                ->where('stats.today.0.logged_in', 0)
+                ->where('stats.today.0.recovered', 0)
+                ->where('stats.today.0.trouble', 0)
+                ->where('stats.month.0.registered', 1)
             );
     }
 
