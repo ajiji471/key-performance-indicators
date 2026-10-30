@@ -147,6 +147,15 @@ class DashboardTest extends TestCase
             );
     }
 
+    public function test_agent_total_terbagi_ke_dashboard(): void
+    {
+        Agent::factory()->count(3)->create();
+
+        $this->login(Role::Admin)
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page->where('agent_total', 3));
+    }
+
     public function test_chart_kosong_tanpa_akun_dan_tidak_memakai_task(): void
     {
         $platform = Platform::factory()->create();

@@ -56,6 +56,7 @@ class DashboardController extends Controller
                 'all'   => $this->countAccountsByPlatformAndStatus(),
             ],
             'agents'    => $agents,
+            'agent_total' => Agent::count(),
             'platforms' => Platform::orderBy('sort')->get(['id', 'slug', 'name']),
             'filters'   => $request->only(['search', 'platform', 'sort']),
         ]);

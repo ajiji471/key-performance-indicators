@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { Head, usePage } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import ChartArea from '@/Components/Common/ChartArea.vue'
+import AgentProgress from '@/Components/Common/AgentProgress.vue'
 import Pagination from '@/Components/Common/Pagination.vue'
 import AgentFilters from '@/Components/Agents/AgentFilters.vue'
 import AgentTable from '@/Components/Agents/AgentTable.vue'
@@ -20,6 +21,7 @@ const manageRoles = ['admin', 'user']
 
 const props = defineProps({
     stats:     { type: Object, required: true },
+    agent_total: { type: Number, required: true },
     agents:    { type: Object, required: true },
     platforms: { type: Array, required: true },
     filters:   { type: Object, default: () => ({}) },
@@ -60,6 +62,9 @@ const closeEdit = (open) => {
             >
                 {{ flash.error }}
             </p>
+
+            <!-- Progress target agent -->
+            <AgentProgress :achieved="props.agent_total" />
 
             <!-- Section Chart (Stacked Bar) -->
             <section aria-label="Agent statistics per platform" class="grid gap-4 md:grid-cols-3">
