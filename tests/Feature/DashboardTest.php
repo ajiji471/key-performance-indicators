@@ -9,7 +9,9 @@ use App\Models\Agent;
 use App\Models\Platform;
 use App\Models\Task;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -100,6 +102,47 @@ class DashboardTest extends TestCase
                 ->where('stats.all.0.logged_in', 1)
                 ->where('stats.all.0.registered', 1)
                 ->where('stats.all.0.recovered', 1)
+                ->where('stats.all.0.trouble', 1)
+            );
+    }
+
+    public function test_chart_difilter_periode_updated_at(): void
+    {
+        $this->travelTo(Carbon::parse('2026-03-15 10:00:00'));
+
+        $platform = Platform::factory()->create();
+
+        $today = Agent::factory()->create()->accounts()->create([
+            'platform_id' => $platform->id,
+            'identifier'  => 'hari-ini@example.com',
+            'status'      => AccountStatus::LoggedIn,
+        ]);
+        $thisMonth = Agent::factory()->create()->accounts()->create([
+            'platform_id' => $platform->id,
+            'identifier'  => 'bulan-ini@example.com',
+            'status'      => AccountStatus::Registered,
+        ]);
+        $lastMonth = Agent::factory()->create()->accounts()->create([
+            'platform_id' => $platform->id,
+            'identifier'  => 'bulan-lalu@example.com',
+            'status'      => AccountStatus::Trouble,
+        ]);
+
+        DB::table('agent_accounts')->where('id', $today->id)->update(['updated_at' => Carbon::parse('2026-03-15 08:00:00')]);
+        DB::table('agent_accounts')->where('id', $thisMonth->id)->update(['updated_at' => Carbon::parse('2026-03-02 08:00:00')]);
+        DB::table('agent_accounts')->where('id', $lastMonth->id)->update(['updated_at' => Carbon::parse('2026-02-20 08:00:00')]);
+
+        $this->login(Role::Admin)
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.today.0.logged_in', 1)
+                ->where('stats.today.0.registered', 0)
+                ->where('stats.today.0.trouble', 0)
+                ->where('stats.month.0.logged_in', 1)
+                ->where('stats.month.0.registered', 1)
+                ->where('stats.month.0.trouble', 0)
+                ->where('stats.all.0.logged_in', 1)
+                ->where('stats.all.0.registered', 1)
                 ->where('stats.all.0.trouble', 1)
             );
     }

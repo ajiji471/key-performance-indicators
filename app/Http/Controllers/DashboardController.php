@@ -6,6 +6,7 @@ use App\Enums\AccountStatus;
 use App\Models\Agent;
 use App\Models\AgentAccount;
 use App\Models\Platform;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -48,13 +49,11 @@ class DashboardController extends Controller
                 ])->values(),
             ]);
 
-        $stats = $this->countAccountsByPlatformAndStatus();
-
         return Inertia::render('Dashboard', [
             'stats' => [
-                'today' => $stats,
-                'month' => $stats,
-                'all'   => $stats,
+                'today' => $this->countAccountsByPlatformAndStatus(now()->startOfDay(), now()->endOfDay()),
+                'month' => $this->countAccountsByPlatformAndStatus(now()->startOfMonth(), now()->endOfMonth()),
+                'all'   => $this->countAccountsByPlatformAndStatus(),
             ],
             'agents'    => $agents,
             'platforms' => Platform::orderBy('sort')->get(['id', 'slug', 'name']),
@@ -63,10 +62,11 @@ class DashboardController extends Controller
     }
 
     // Hitung jumlah agent per platform per status dari status akun (snapshot)
-    private function countAccountsByPlatformAndStatus(): array
+    private function countAccountsByPlatformAndStatus(?CarbonInterface $from = null, ?CarbonInterface $to = null): array
     {
         $stats = AgentAccount::query()
             ->selectRaw('platform_id, status, COUNT(DISTINCT agent_id) as total')
+            ->when($from && $to, fn ($query) => $query->whereBetween('updated_at', [$from, $to]))
             ->groupBy('platform_id', 'status')
             ->get()
             ->groupBy('platform_id');
