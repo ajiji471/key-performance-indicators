@@ -48,7 +48,7 @@ const STATUSES = [
             <div class="grid gap-1">
                 <Input
                     v-model="form.accounts[index].password"
-                    type="password"
+                    type="text"
                     placeholder="Optional"
                     autocomplete="new-password"
                     :aria-label="`Password ${platform.name}`"

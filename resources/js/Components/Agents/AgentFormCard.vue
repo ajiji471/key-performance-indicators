@@ -185,7 +185,7 @@ onBeforeUnmount(resetPreview)
                         <Input
                             id="agent-password"
                             v-model="form.password"
-                            type="password"
+                            type="text"
                             placeholder="At least 6 characters"
                             autocomplete="new-password"
                             data-testid="agent-form-password"
