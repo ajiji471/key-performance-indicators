@@ -59,7 +59,7 @@ const menuItems = computed(() => {
                 @click="closeMobile"
             >
                 <ApplicationLogo class="h-8 w-auto fill-current text-sidebar-primary" />
-                <span class="text-sm font-semibold tracking-wide text-sidebar-foreground">KPI</span>
+                <span class="text-sm font-semibold tracking-wide text-sidebar-foreground">Go4Q</span>
             </Link>
 
             <Button

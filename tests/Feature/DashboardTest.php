@@ -39,7 +39,7 @@ class DashboardTest extends TestCase
     {
         Storage::fake('public');
         Agent::factory()->create([
-            'name'        => 'Andi',
+            'name' => 'Andi',
             'avatar_path' => 'agents/avatars/a.jpg',
         ]);
         Storage::disk('public')->put('agents/avatars/a.jpg', 'fake-image');
@@ -76,16 +76,16 @@ class DashboardTest extends TestCase
         foreach ([AccountStatus::LoggedIn, AccountStatus::Registered, AccountStatus::Recovered, AccountStatus::Trouble] as $index => $status) {
             Agent::factory()->create()->accounts()->create([
                 'platform_id' => $platform->id,
-                'identifier'  => "agent{$index}@example.com",
-                'status'      => $status,
+                'identifier' => "agent{$index}@example.com",
+                'status' => $status,
             ]);
         }
 
         // task tidak boleh ikut dihitung chart
         Task::factory()->create([
             'platform_id' => $platform->id,
-            'status'      => TaskStatus::Registered,
-            'task_date'   => today()->toDateString(),
+            'status' => TaskStatus::Registered,
+            'task_date' => today()->toDateString(),
         ]);
 
         $this->login(Role::Admin)
@@ -114,18 +114,18 @@ class DashboardTest extends TestCase
 
         $today = Agent::factory()->create()->accounts()->create([
             'platform_id' => $platform->id,
-            'identifier'  => 'hari-ini@example.com',
-            'status'      => AccountStatus::LoggedIn,
+            'identifier' => 'hari-ini@example.com',
+            'status' => AccountStatus::LoggedIn,
         ]);
         $thisMonth = Agent::factory()->create()->accounts()->create([
             'platform_id' => $platform->id,
-            'identifier'  => 'bulan-ini@example.com',
-            'status'      => AccountStatus::Registered,
+            'identifier' => 'bulan-ini@example.com',
+            'status' => AccountStatus::Registered,
         ]);
         $lastMonth = Agent::factory()->create()->accounts()->create([
             'platform_id' => $platform->id,
-            'identifier'  => 'bulan-lalu@example.com',
-            'status'      => AccountStatus::Trouble,
+            'identifier' => 'bulan-lalu@example.com',
+            'status' => AccountStatus::Trouble,
         ]);
 
         DB::table('agent_accounts')->where('id', $today->id)->update(['updated_at' => Carbon::parse('2026-03-15 08:00:00')]);
@@ -156,14 +156,21 @@ class DashboardTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->where('agent_total', 3));
     }
 
+    public function test_agent_target_default_200_tanpa_setting(): void
+    {
+        $this->login(Role::Admin)
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page->where('agent_target', 200));
+    }
+
     public function test_chart_kosong_tanpa_akun_dan_tidak_memakai_task(): void
     {
         $platform = Platform::factory()->create();
 
         Task::factory()->create([
             'platform_id' => $platform->id,
-            'status'      => TaskStatus::LoggedIn,
-            'task_date'   => today()->toDateString(),
+            'status' => TaskStatus::LoggedIn,
+            'task_date' => today()->toDateString(),
         ]);
 
         $this->login(Role::Admin)
@@ -185,16 +192,16 @@ class DashboardTest extends TestCase
 
         $agent->accounts()->create([
             'platform_id' => $platform->id,
-            'identifier'  => 'rogelio@example.com',
-            'status'      => AccountStatus::LoggedIn,
+            'identifier' => 'rogelio@example.com',
+            'status' => AccountStatus::LoggedIn,
         ]);
 
         // task lama tidak boleh menimpa status akun di tabel
         Task::factory()->create([
-            'agent_id'    => $agent->id,
+            'agent_id' => $agent->id,
             'platform_id' => $platform->id,
-            'status'      => TaskStatus::Trouble,
-            'task_date'   => today()->toDateString(),
+            'status' => TaskStatus::Trouble,
+            'task_date' => today()->toDateString(),
         ]);
 
         $this->login(Role::Admin)

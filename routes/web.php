@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AgentAccountController;
 use App\Http\Controllers\AgentController;
+use App\Http\Controllers\AgentTargetController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KpiController;
 use App\Http\Controllers\ProfileController;
@@ -39,6 +40,12 @@ Route::middleware(['auth', 'role:admin,user,auditor'])->group(function () {
             ->whereNumber('agent')->whereNumber('account')->name('agents.accounts.update');
         Route::delete('/agents/{agent}/accounts/{account}', [AgentAccountController::class, 'destroy'])
             ->whereNumber('agent')->whereNumber('account')->name('agents.accounts.destroy');
+    });
+
+    // target agent global: tulis hanya admin
+    Route::middleware('role:admin')->group(function () {
+        Route::patch('/dashboard/agent-target', [AgentTargetController::class, 'update'])
+            ->name('dashboard.agent-target.update');
     });
 });
 

@@ -6,6 +6,7 @@ use App\Enums\AccountStatus;
 use App\Models\Agent;
 use App\Models\AgentAccount;
 use App\Models\Platform;
+use App\Models\Setting;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -17,8 +18,8 @@ class DashboardController extends Controller
     public function __invoke(Request $request): Response
     {
         $filters = $request->validate([
-            'search'   => ['nullable', 'string', 'max:100'],
-            'sort'     => ['nullable', 'in:asc,desc'],
+            'search' => ['nullable', 'string', 'max:100'],
+            'sort' => ['nullable', 'in:asc,desc'],
         ]);
 
         $agents = Agent::query()
@@ -36,16 +37,16 @@ class DashboardController extends Controller
             ->paginate(10)
             ->withQueryString()
             ->through(fn (Agent $agent) => [
-                'id'          => $agent->id,
-                'name'        => $agent->name,
-                'avatar_url'  => $agent->avatarUrl(),
+                'id' => $agent->id,
+                'name' => $agent->name,
+                'avatar_url' => $agent->avatarUrl(),
                 'device_user' => $agent->device_user,
-                'created_at'  => $agent->created_at?->toDateString(),
-                'platforms'   => $agent->accounts->map(fn ($account) => [
-                    'slug'       => $account->platform->slug,
-                    'name'       => $account->platform->name,
+                'created_at' => $agent->created_at?->toDateString(),
+                'platforms' => $agent->accounts->map(fn ($account) => [
+                    'slug' => $account->platform->slug,
+                    'name' => $account->platform->name,
                     'identifier' => $account->identifier,
-                    'status'     => $account->status?->value ?? 'registered',
+                    'status' => $account->status?->value ?? 'registered',
                 ])->values(),
             ]);
 
@@ -53,12 +54,13 @@ class DashboardController extends Controller
             'stats' => [
                 'today' => $this->countAccountsByPlatformAndStatus(now()->startOfDay(), now()->endOfDay()),
                 'month' => $this->countAccountsByPlatformAndStatus(now()->startOfMonth(), now()->endOfMonth()),
-                'all'   => $this->countAccountsByPlatformAndStatus(),
+                'all' => $this->countAccountsByPlatformAndStatus(),
             ],
-            'agents'    => $agents,
+            'agents' => $agents,
             'agent_total' => Agent::count(),
+            'agent_target' => (int) Setting::get('agent_target', 200),
             'platforms' => Platform::orderBy('sort')->get(['id', 'slug', 'name']),
-            'filters'   => $request->only(['search', 'platform', 'sort']),
+            'filters' => $request->only(['search', 'platform', 'sort']),
         ]);
     }
 

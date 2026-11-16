@@ -1,0 +1,78 @@
+<!doctype html>
+<html class="dark" lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Agent target edit QA — synthetic props</title><link rel="preconnect" href="https://fonts.bunny.net"><link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet"></head>
+<body class="font-sans antialiased"><div id="app"></div>
+<script type="module">
+import '/resources/css/app.css';
+import { createApp, h } from 'vue';
+import { createInertiaApp } from '@inertiajs/vue3';
+import Dashboard from '/resources/js/Pages/Dashboard.vue';
+const mode = new URLSearchParams(location.search).get('mode') || 'admin';
+const users = {
+    admin: { id: 1, name: 'Admin QA', email: 'admin@qa.test', role: 'admin' },
+    user: { id: 2, name: 'Inputer QA', email: 'user@qa.test', role: 'user' },
+    auditor: { id: 3, name: 'Auditor QA', email: 'auditor@qa.test', role: 'auditor' },
+    guest: null,
+};
+const platformTotals = [
+    { name: 'Google', registered: 40, logged_in: 30, recovered: 2, trouble: 1 },
+    { name: 'Facebook', registered: 25, logged_in: 20, recovered: 0, trouble: 0 },
+];
+const stats = { today: platformTotals, month: platformTotals, all: platformTotals };
+const platforms = [{ id: 1, slug: 'google', name: 'Google' }, { id: 2, slug: 'facebook', name: 'Facebook' }];
+const agents = {
+    data: [{ id: 1, name: 'Agent QA', avatar_url: null, device_user: 'device-1', created_at: '2026-11-01', platforms: [{ slug: 'google', name: 'Google', identifier: 'agent@qa.test', status: 'logged_in' }] }],
+    current_page: 1, last_page: 1, prev_page_url: null, next_page_url: null,
+};
+const routePaths = {
+    dashboard: '/dashboard', kpi: '/kpi', 'profile.edit': '/profile', logout: '/logout', login: '/login',
+    'agents.show': '/agents/1', 'agents.store': '/agents', 'agents.update': '/agents/1', 'agents.destroy': '/agents/1',
+    'agents.accounts.store': '/agents/1/accounts', 'agents.accounts.update': '/agents/1/accounts/1', 'agents.accounts.destroy': '/agents/1/accounts/1',
+    'dashboard.agent-target.update': '/dashboard/agent-target',
+};
+window.route = (name) => name === undefined
+    ? { current: (pattern) => pattern === 'dashboard' }
+    : (routePaths[name] ?? '/');
+window.qaErrors = [];
+window.addEventListener('error', (event) => window.qaErrors.push(event.message));
+window.addEventListener('unhandledrejection', (event) => window.qaErrors.push(String(event.reason)));
+await createInertiaApp({
+    page: {
+        component: 'Dashboard', url: location.pathname + location.search, version: null,
+        props: { auth: { user: users[mode] }, flash: {}, stats, agents, agent_total: 1234, agent_target: 2000, platforms, filters: {} },
+    },
+    resolve: () => Dashboard,
+    setup({ el, App, props, plugin }) {
+        const app = createApp({ render: () => h(App, props) });
+        app.config.globalProperties.route = window.route;
+        app.config.errorHandler = (error) => window.qaErrors.push(error.message);
+        return app.use(plugin).mount(el);
+    },
+});
+const barText = () => document.querySelector('[data-testid="agent-progress"]')?.innerText.replace(/\s+/g, ' ').trim() ?? '';
+window.qaInspect = () => {
+    const text = document.body.innerText;
+    const dialog = document.querySelector('[data-testid="agent-target-dialog"]');
+    const input = document.querySelector('[data-testid="agent-target-input"]');
+    return {
+        mode,
+        viewport: innerWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+        editButton: !!document.querySelector('[data-testid="agent-target-edit"]'),
+        barText: barText(),
+        enNumbers: barText().includes('1,234 of 2,000'),
+        dialogPresent: !!dialog,
+        dialogTitle: dialog?.querySelector('h2')?.textContent ?? null,
+        inputValue: input?.value ?? null,
+        submitButton: !!document.querySelector('[data-testid="agent-target-submit"]'),
+        cancelButton: !!document.querySelector('[data-testid="agent-target-cancel"]'),
+        indoLeftover: ['Target agent', 'Simpan', 'Batal', 'Ubah', 'dari'].filter((s) => barText().includes(s)),
+        errors: window.qaErrors,
+    };
+};
+window.qaOpenDialog = () => {
+    document.querySelector('[data-testid="agent-target-edit"]')?.click();
+    return new Promise((resolve) => setTimeout(() => resolve(window.qaInspect()), 120));
+};
+window.qaReady = true;
+</script></body></html>

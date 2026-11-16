@@ -1,11 +1,17 @@
 <script setup>
 import { computed } from 'vue'
+import { Pencil } from '@lucide/vue'
+import { Button } from '@/Components/ui/button'
 
 const props = defineProps({
     achieved: { type: Number, required: true },
     target:   { type: Number, default: 200 },
+    canEdit:  { type: Boolean, default: false },
 })
 
+const emit = defineEmits(['edit'])
+
+const fmt = new Intl.NumberFormat('en-US')
 const percent = computed(() => Math.min(Math.round((props.achieved / props.target) * 100), 100))
 </script>
 
@@ -13,10 +19,23 @@ const percent = computed(() => Math.min(Math.round((props.achieved / props.targe
     <div class="rounded-lg border border-border bg-card p-4" data-testid="agent-progress">
         <div class="flex flex-wrap items-center justify-between gap-2">
             <p class="font-medium text-foreground">Agent progress</p>
-            <p class="text-sm text-muted-foreground">
-                {{ achieved }} of {{ target }} agents
-                <span class="ml-1 font-medium text-foreground">{{ percent }}%</span>
-            </p>
+            <div class="flex items-center gap-2">
+                <p class="text-sm text-muted-foreground">
+                    {{ fmt.format(achieved) }} of {{ fmt.format(target) }} agents
+                    <span class="ml-1 font-medium text-foreground">{{ percent }}%</span>
+                </p>
+                <Button
+                    v-if="canEdit"
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Edit agent target"
+                    data-testid="agent-target-edit"
+                    @click="emit('edit')"
+                >
+                    <Pencil />
+                </Button>
+            </div>
         </div>
 
         <div

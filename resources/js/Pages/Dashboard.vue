@@ -4,6 +4,7 @@ import { Head, usePage } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import ChartArea from '@/Components/Common/ChartArea.vue'
 import AgentProgress from '@/Components/Common/AgentProgress.vue'
+import AgentTargetDialog from '@/Components/Common/AgentTargetDialog.vue'
 import Pagination from '@/Components/Common/Pagination.vue'
 import AgentFilters from '@/Components/Agents/AgentFilters.vue'
 import AgentTable from '@/Components/Agents/AgentTable.vue'
@@ -22,6 +23,7 @@ const manageRoles = ['admin', 'user']
 const props = defineProps({
     stats:     { type: Object, required: true },
     agent_total: { type: Number, required: true },
+    agent_target: { type: Number, default: 200 },
     agents:    { type: Object, required: true },
     platforms: { type: Array, required: true },
     filters:   { type: Object, default: () => ({}) },
@@ -29,8 +31,10 @@ const props = defineProps({
 
 const page = usePage()
 const canManage = computed(() => manageRoles.includes(page.props.auth.user?.role))
+const isAdmin = computed(() => page.props.auth.user?.role === 'admin')
 const flash = computed(() => page.props.flash ?? {})
 const addOpen = ref(false)
+const targetOpen = ref(false)
 const editingId = ref(null)
 const editOpen = computed(() => editingId.value !== null)
 
@@ -64,7 +68,12 @@ const closeEdit = (open) => {
             </p>
 
             <!-- Progress target agent -->
-            <AgentProgress :achieved="props.agent_total" />
+            <AgentProgress
+                :achieved="props.agent_total"
+                :target="props.agent_target"
+                :can-edit="isAdmin"
+                @edit="targetOpen = true"
+            />
 
             <!-- Section Chart (Stacked Bar) -->
             <section aria-label="Agent statistics per platform" class="grid gap-4 md:grid-cols-3">
@@ -92,6 +101,7 @@ const closeEdit = (open) => {
             :platforms="platforms"
             @update:open="closeEdit"
         />
+        <AgentTargetDialog v-model:open="targetOpen" :target="props.agent_target" />
 
     </AuthenticatedLayout>
 </template>
