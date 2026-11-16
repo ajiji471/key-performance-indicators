@@ -4,6 +4,7 @@ use App\Http\Controllers\AgentAccountController;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AgentTargetController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\KpiController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,8 @@ Route::get('/dashboard', DashboardController::class)->name('dashboard');
 // semua role
 Route::middleware(['auth', 'role:admin,user,auditor'])->group(function () {
     Route::get('/kpi', KpiController::class)->name('kpi');
+
+    Route::get('/history', HistoryController::class)->name('history');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

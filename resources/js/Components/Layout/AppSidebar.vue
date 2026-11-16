@@ -16,7 +16,7 @@ import {
     sidebarMenuButtonVariants,
 } from '@/Components/ui/sidebar'
 import { cn } from '@/lib/utils'
-import { ChartBar, LayoutDashboard, LogOut, UserRound, X } from '@lucide/vue'
+import { ChartBar, History, LayoutDashboard, LogOut, UserRound, X } from '@lucide/vue'
 
 const page = usePage()
 const user = computed(() => page.props.auth.user)
@@ -43,6 +43,13 @@ const menuItems = computed(() => {
             active: route().current('kpi'),
             icon: ChartBar,
             testid: 'sidebar-link-kpi',
+        })
+        items.push({
+            label: 'History',
+            href: route('history'),
+            active: route().current('history'),
+            icon: History,
+            testid: 'sidebar-link-history',
         })
     }
 

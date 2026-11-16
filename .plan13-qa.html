@@ -1,0 +1,115 @@
+<!doctype html>
+<html class="dark" lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>History QA — synthetic props</title><link rel="preconnect" href="https://fonts.bunny.net"><link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet"></head>
+<body class="font-sans antialiased"><div id="app"></div>
+<script type="module">
+import '/resources/css/app.css';
+import { createApp, h } from 'vue';
+import { createInertiaApp } from '@inertiajs/vue3';
+import History from '/resources/js/Pages/History/Index.vue';
+const params = new URLSearchParams(location.search);
+const mode = params.get('mode') || 'admin';
+const empty = params.get('empty') === '1';
+const users = {
+    admin: { id: 1, name: 'Admin QA', email: 'admin@qa.test', role: 'admin' },
+    user: { id: 2, name: 'Inputer QA', email: 'user@qa.test', role: 'user' },
+    auditor: { id: 3, name: 'Auditor QA', email: 'auditor@qa.test', role: 'auditor' },
+    guest: null,
+};
+const rows = [
+    { id: 6, inputer_id: 2, inputer_name: 'Ajiji', action: 'deleted', subject_type: 'account', subject_id: 11, agent_id: 1, agent_name: 'Andrew', platform_id: 1, platform_slug: 'google', platform_name: 'Google', identifier: 'andrew@gmail.com', occurred_at: '2026-11-17T00:29:00.000000Z' },
+    { id: 5, inputer_id: 3, inputer_name: 'Gasti', action: 'updated', subject_type: 'account', subject_id: 12, agent_id: 2, agent_name: 'Budi', platform_id: 2, platform_slug: 'facebook', platform_name: 'Facebook', identifier: 'gasti.fb', occurred_at: '2026-11-16T13:05:00.000000Z' },
+    { id: 4, inputer_id: 2, inputer_name: 'Ajiji', action: 'created', subject_type: 'account', subject_id: 11, agent_id: 1, agent_name: 'Andrew', platform_id: 1, platform_slug: 'google', platform_name: 'Google', identifier: 'andrew@gmail.com', occurred_at: '2026-11-16T09:00:00.000000Z' },
+    { id: 3, inputer_id: 2, inputer_name: 'Ajiji', action: 'deleted', subject_type: 'agent', subject_id: 3, agent_id: 3, agent_name: 'Citra', platform_id: null, platform_slug: null, platform_name: null, identifier: null, occurred_at: '2026-11-15T23:59:59.000000Z' },
+    { id: 2, inputer_id: 3, inputer_name: 'Gasti', action: 'updated', subject_type: 'agent', subject_id: 2, agent_id: 2, agent_name: 'Budi', platform_id: null, platform_slug: null, platform_name: null, identifier: null, occurred_at: '2026-11-15T08:30:00.000000Z' },
+    { id: 1, inputer_id: 2, inputer_name: 'Ajiji', action: 'created', subject_type: 'agent', subject_id: 1, agent_id: 1, agent_name: 'Andrew', platform_id: null, platform_slug: null, platform_name: null, identifier: null, occurred_at: '2026-11-14T00:00:00.000000Z' },
+];
+const data = empty ? [] : rows;
+const logs = {
+    data,
+    current_page: 1, last_page: empty ? 1 : 2,
+    prev_page_url: null,
+    next_page_url: empty ? null : '/history?page=2',
+    from: 1, to: data.length, per_page: 15, total: data.length,
+};
+const filters = { from: params.get('from') || null, until: params.get('until') || null };
+const routePaths = {
+    dashboard: '/dashboard', kpi: '/kpi', history: '/history',
+    'profile.edit': '/profile', logout: '/logout', login: '/login',
+};
+window.route = (name) => name === undefined
+    ? { current: (pattern) => pattern === 'history' }
+    : (routePaths[name] ?? '/');
+window.qaErrors = [];
+window.qaRequests = [];
+window.addEventListener('error', (event) => window.qaErrors.push(event.message));
+window.addEventListener('unhandledrejection', (event) => window.qaErrors.push(String(event.reason)));
+const origOpen = XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+    window.qaRequests.push({ method, url: String(url) });
+    return origOpen.call(this, method, url, ...rest);
+};
+await createInertiaApp({
+    page: {
+        component: 'History/Index', url: '/history' + location.search, version: null,
+        props: { auth: { user: users[mode] }, flash: {}, logs, filters },
+    },
+    resolve: () => History,
+    setup({ el, App, props, plugin }) {
+        const app = createApp({ render: () => h(App, props) });
+        app.config.globalProperties.route = window.route;
+        app.config.errorHandler = (error) => window.qaErrors.push(error.message);
+        return app.use(plugin).mount(el);
+    },
+});
+const cell = (id, index) => document.querySelector(`[data-testid="history-row-${id}"]`)?.querySelectorAll('td')[index]?.textContent.trim() ?? null;
+const card = (id) => document.querySelector(`[data-testid="history-card-${id}"]`)?.innerText.replace(/\s+/g, ' ').trim() ?? null;
+window.qaInspect = () => {
+    const text = document.body.innerText;
+    return {
+        mode, empty, viewport: innerWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+        tablePresent: !!document.querySelector('[data-testid="history-table"]'),
+        rowCount: document.querySelectorAll('[data-testid^="history-row-"]').length,
+        cardCount: document.querySelectorAll('[data-testid^="history-card-"]').length,
+        emptyPresent: !!document.querySelector('[data-testid="history-empty"]'),
+        emptyMobilePresent: !!document.querySelector('[data-testid="history-empty-mobile"]'),
+        whenAgentCreated: cell(1, 0),
+        activityAgentCreated: cell(1, 1),
+        whenAccountDeleted: cell(6, 0),
+        activityAccountCreated: cell(4, 1),
+        activityAccountUpdated: cell(5, 1),
+        activityAgentDeleted: cell(3, 1),
+        cardAgentCreated: card(1),
+        paginationText: document.querySelector('[data-testid="pagination"]')?.innerText.replace(/\s+/g, ' ').trim() ?? null,
+        nextPresent: !!document.querySelector('[data-testid="page-next"]'),
+        fromValue: document.querySelector('[data-testid="history-from"]')?.value ?? null,
+        untilValue: document.querySelector('[data-testid="history-until"]')?.value ?? null,
+        applyPresent: !!document.querySelector('[data-testid="history-apply"]'),
+        resetPresent: !!document.querySelector('[data-testid="history-reset"]'),
+        navHistory: !!document.querySelector('[data-testid="sidebar-link-history"]'),
+        timezoneNote: text.includes('Time zone: UTC'),
+        indoLeftover: ['menambahkan', 'menghapus', 'mengedit', 'Simpan', 'Batal', 'Terapkan', 'Tanggal', 'dari'].filter((s) => text.includes(s)),
+        passwordLeak: /secret|password/i.test(text),
+        errors: window.qaErrors,
+    };
+};
+const setDate = (testid, value) => {
+    const el = document.querySelector(`[data-testid="${testid}"]`);
+    if (!el) return;
+    el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+};
+window.qaApplyFilter = async (from, until) => {
+    setDate('history-from', from);
+    setDate('history-until', until);
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    document.querySelector('[data-testid="history-apply"]')?.click();
+    return new Promise((resolve) => setTimeout(() => resolve({ requests: window.qaRequests.slice(), inspect: window.qaInspect() }), 250));
+};
+window.qaReset = () => {
+    document.querySelector('[data-testid="history-reset"]')?.click();
+    return new Promise((resolve) => setTimeout(() => resolve({ requests: window.qaRequests.slice(), inspect: window.qaInspect() }), 200));
+};
+window.qaReady = true;
+</script></body></html>

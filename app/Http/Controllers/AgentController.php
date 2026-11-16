@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Enums\AccountStatus;
+use App\Enums\ActivityAction;
 use App\Http\Requests\StoreAgentRequest;
 use App\Http\Requests\UpdateAgentRequest;
 use App\Models\Agent;
 use App\Models\User;
 use App\Services\AccountStageCreditRecorder;
+use App\Services\ActivityRecorder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +20,7 @@ use Throwable;
 
 class AgentController extends Controller
 {
-    public function __construct(private AccountStageCreditRecorder $credits) {}
+    public function __construct(private AccountStageCreditRecorder $credits, private ActivityRecorder $activity) {}
 
     public function store(StoreAgentRequest $request): RedirectResponse
     {
@@ -46,12 +49,15 @@ class AgentController extends Controller
                 $agent = Agent::create([
                     ...$data,
                     'avatar_path' => $avatarPath,
-                    'created_by'  => $request->user()->id,
+                    'created_by' => $request->user()->id,
                 ]);
+
+                $this->activity->agent(ActivityAction::Created, $agent, $request->user());
 
                 foreach ($accounts as $attributes) {
                     $account = $agent->accounts()->create(['status' => AccountStatus::Registered, ...$attributes]);
                     $this->credits->record($account, $request->user(), null);
+                    $this->activity->account(ActivityAction::Created, $account, $agent, $request->user());
                 }
             });
         } catch (Throwable $e) {
@@ -72,32 +78,32 @@ class AgentController extends Controller
 
         return response()->json([
             'agent' => [
-                'id'                 => $agent->id,
-                'name'               => $agent->name,
-                'avatar_url'         => $agent->avatarUrl(),
-                'email'              => $agent->email,
-                'recovery_email'     => $agent->recovery_email,
-                'password'           => $agent->password,
-                'birth_date'         => $agent->birth_date?->toDateString(),
-                'address'            => $agent->address,
-                'latitude'           => $agent->latitude,
-                'longitude'          => $agent->longitude,
-                'job'                => $agent->job,
-                'hobby'              => $agent->hobby,
-                'context'            => $agent->context,
-                'device_user'        => $agent->device_user,
-                'device_number'      => $agent->device_number,
+                'id' => $agent->id,
+                'name' => $agent->name,
+                'avatar_url' => $agent->avatarUrl(),
+                'email' => $agent->email,
+                'recovery_email' => $agent->recovery_email,
+                'password' => $agent->password,
+                'birth_date' => $agent->birth_date?->toDateString(),
+                'address' => $agent->address,
+                'latitude' => $agent->latitude,
+                'longitude' => $agent->longitude,
+                'job' => $agent->job,
+                'hobby' => $agent->hobby,
+                'context' => $agent->context,
+                'device_user' => $agent->device_user,
+                'device_number' => $agent->device_number,
                 'device_released_at' => $agent->device_released_at?->toDateString(),
-                'created_at'         => $agent->created_at?->toDateString(),
-                'creator'            => $agent->creator?->name,
-                'accounts'           => $agent->accounts->map(fn ($account) => [
-                    'id'          => $account->id,
+                'created_at' => $agent->created_at?->toDateString(),
+                'creator' => $agent->creator?->name,
+                'accounts' => $agent->accounts->map(fn ($account) => [
+                    'id' => $account->id,
                     'platform_id' => $account->platform_id,
-                    'slug'        => $account->platform->slug,
-                    'platform'    => $account->platform->name,
-                    'identifier'  => $account->identifier,
-                    'password'    => $account->password,
-                    'status'      => $account->status->value,
+                    'slug' => $account->platform->slug,
+                    'platform' => $account->platform->name,
+                    'identifier' => $account->identifier,
+                    'password' => $account->password,
+                    'status' => $account->status->value,
                 ])->values(),
             ],
         ]);
@@ -112,9 +118,9 @@ class AgentController extends Controller
         $accounts = collect($data['accounts'] ?? [])
             ->map(fn (array $row) => [
                 'platform_id' => (int) $row['platform_id'],
-                'identifier'  => trim((string) ($row['identifier'] ?? '')),
-                'password'    => (string) ($row['password'] ?? ''),
-                'status'      => (string) ($row['status'] ?? ''),
+                'identifier' => trim((string) ($row['identifier'] ?? '')),
+                'password' => (string) ($row['password'] ?? ''),
+                'status' => (string) ($row['status'] ?? ''),
             ])
             ->all();
 
@@ -124,7 +130,7 @@ class AgentController extends Controller
             unset($data['password']);
         }
 
-        $oldAvatar  = $agent->avatar_path;
+        $oldAvatar = $agent->avatar_path;
         $avatarPath = $request->file('avatar')?->store('agents/avatars', 'public');
 
         try {
@@ -137,6 +143,10 @@ class AgentController extends Controller
                 }
 
                 $agent->save();
+
+                if ($agent->wasChanged()) {
+                    $this->activity->agent(ActivityAction::Updated, $agent, $request->user());
+                }
 
                 if ($hasAccounts) {
                     $this->syncAccounts($agent, $accounts, $request->user());
@@ -168,7 +178,10 @@ class AgentController extends Controller
             $existing = $agent->accounts()->where('platform_id', $row['platform_id'])->first();
 
             if ($row['identifier'] === '') {
-                $existing?->delete();
+                if ($existing) {
+                    $this->activity->account(ActivityAction::Deleted, $existing, $agent, $inputer);
+                    $existing->delete();
+                }
 
                 continue;
             }
@@ -188,20 +201,28 @@ class AgentController extends Controller
             if ($existing) {
                 $existing->fill($attributes)->save();
                 $account = $existing;
+
+                if ($account->wasChanged()) {
+                    $this->activity->account(ActivityAction::Updated, $account, $agent, $inputer);
+                }
             } else {
                 $account = $agent->accounts()->create([
                     'status' => AccountStatus::Registered,
                     ...$attributes,
                     'platform_id' => $row['platform_id'],
                 ]);
+
+                $this->activity->account(ActivityAction::Created, $account, $agent, $inputer);
             }
 
             $this->credits->record($account, $inputer, $previousStatus);
         }
     }
 
-    public function destroy(Agent $agent): RedirectResponse
+    public function destroy(Agent $agent, Request $request): RedirectResponse
     {
+        $this->activity->agent(ActivityAction::Deleted, $agent, $request->user());
+
         if ($agent->avatar_path) {
             Storage::disk('public')->delete($agent->avatar_path);
         }

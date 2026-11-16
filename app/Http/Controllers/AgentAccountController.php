@@ -3,19 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Enums\AccountStatus;
+use App\Enums\ActivityAction;
 use App\Http\Requests\StoreAgentAccountRequest;
 use App\Http\Requests\UpdateAgentAccountRequest;
 use App\Models\Agent;
 use App\Models\AgentAccount;
 use App\Services\AccountStageCreditRecorder;
+use App\Services\ActivityRecorder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\ValidationException;
 
 class AgentAccountController extends Controller
 {
-    public function __construct(private AccountStageCreditRecorder $credits) {}
+    public function __construct(private AccountStageCreditRecorder $credits, private ActivityRecorder $activity) {}
 
     public function store(StoreAgentAccountRequest $request, Agent $agent): RedirectResponse
     {
@@ -33,6 +36,7 @@ class AgentAccountController extends Controller
 
             $account = $agent->accounts()->create($data);
             $this->credits->record($account, $request->user(), null);
+            $this->activity->account(ActivityAction::Created, $account, $agent, $request->user());
         });
 
         return Redirect::route('dashboard')->with('success', 'Platform account added.');
@@ -63,18 +67,24 @@ class AgentAccountController extends Controller
             $previousStatus = $account->status;
             $account->fill($data)->save();
             $this->credits->record($account, $request->user(), $previousStatus);
+
+            if ($account->wasChanged()) {
+                $this->activity->account(ActivityAction::Updated, $account, $agent, $request->user());
+            }
         });
 
         return Redirect::route('dashboard')->with('success', 'Platform account updated.');
     }
 
-    public function destroy(Agent $agent, AgentAccount $account): RedirectResponse
+    public function destroy(Agent $agent, AgentAccount $account, Request $request): RedirectResponse
     {
         $this->ensureBelongsToAgent($agent, $account);
 
-        DB::transaction(function () use ($agent, $account) {
+        DB::transaction(function () use ($request, $agent, $account) {
             $agent = Agent::query()->lockForUpdate()->findOrFail($agent->id);
-            $agent->accounts()->findOrFail($account->id)->delete();
+            $target = $agent->accounts()->findOrFail($account->id);
+            $this->activity->account(ActivityAction::Deleted, $target, $agent, $request->user());
+            $target->delete();
         });
 
         return Redirect::route('dashboard')->with('success', 'Platform account deleted.');
