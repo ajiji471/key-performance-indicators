@@ -44,21 +44,21 @@ const closeEdit = (open) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="text-base font-semibold text-neutral-900">Dashboard</h1>
+            <h1 class="text-base font-semibold text-foreground">Dashboard</h1>
         </template>
 
         <div class="mx-auto flex max-w-7xl flex-col gap-6">
             <p
                 v-if="flash.success"
                 role="status"
-                class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+                class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300"
             >
                 {{ flash.success }}
             </p>
             <p
                 v-if="flash.error"
                 role="alert"
-                class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300"
             >
                 {{ flash.error }}
             </p>
@@ -68,7 +68,7 @@ const closeEdit = (open) => {
 
             <!-- Section Chart (Stacked Bar) -->
             <section aria-label="Agent statistics per platform" class="grid gap-4 md:grid-cols-3">
-                <div v-for="c in chartCards" :key="c.key" class="rounded-lg border bg-white p-4">
+                <div v-for="c in chartCards" :key="c.key" class="rounded-lg border border-border bg-card p-4">
                     <ChartArea
                         :name="c.key"
                         :title="c.title"
@@ -78,7 +78,7 @@ const closeEdit = (open) => {
             </section>
 
             <!-- Section Tabel -->
-            <section aria-label="Agent list" class="flex flex-col gap-3 rounded-lg border bg-white p-4">
+            <section aria-label="Agent list" class="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
                 <AgentFilters :filters="filters" :can-manage="canManage" @add="addOpen = true" />
                 <AgentTable :agents="agents.data" :platforms="platforms" :can-manage="canManage" @open="editingId = $event" />
                 <Pagination :meta="agents" />

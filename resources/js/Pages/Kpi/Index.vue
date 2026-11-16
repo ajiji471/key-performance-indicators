@@ -8,11 +8,11 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="truncate text-base font-semibold text-neutral-900">KPI</h1>
+            <h1 class="truncate text-base font-semibold text-foreground">KPI</h1>
         </template>
 
-        <div class="rounded-lg border bg-white p-6">
-            <p class="text-sm text-neutral-700">ini halaman kpi</p>
+        <div class="rounded-lg border border-border bg-card p-6">
+            <p class="text-sm text-muted-foreground">ini halaman kpi</p>
         </div>
     </AuthenticatedLayout>
 </template>

@@ -58,7 +58,7 @@ const data = computed(() => ({
             pointRadius: 0,
             pointHoverRadius: 4,
             pointHoverBorderWidth: 2,
-            pointHoverBackgroundColor: '#ffffff',
+            pointHoverBackgroundColor: '#0a0a0a',
             pointHoverBorderColor: s.color,
             pointStyle: 'circle',
         }
@@ -72,11 +72,11 @@ const options = {
     plugins: {
         legend: { display: false },
         tooltip: {
-            backgroundColor: '#ffffff',
-            borderColor: '#e5e5e5',
+            backgroundColor: '#141416',
+            borderColor: '#2a2a2e',
             borderWidth: 1,
-            titleColor: '#737373',
-            bodyColor: '#171717',
+            titleColor: '#a1a1aa',
+            bodyColor: '#f4f4f5',
             padding: 10,
             cornerRadius: 8,
             boxPadding: 4,
@@ -93,15 +93,15 @@ const options = {
             stacked: true,
             grid: { display: false },
             border: { display: false },
-            ticks: { color: '#737373', font: { family: font, size: 11 }, maxRotation: 0 },
+            ticks: { color: '#a1a1aa', font: { family: font, size: 11 }, maxRotation: 0 },
         },
         y: {
             stacked: true,
             beginAtZero: true,
-            grid: { color: 'rgba(0, 0, 0, 0.06)' },
+            grid: { color: 'rgba(255, 255, 255, 0.07)' },
             border: { display: false },
             ticks: {
-                color: '#a3a3a3',
+                color: '#71717a',
                 font: { family: font, size: 11 },
                 padding: 8,
                 maxTicksLimit: 5,
@@ -117,16 +117,16 @@ const empty = computed(() => props.platforms.every((p) => p.logged_in === 0 && p
 <template>
     <figure :data-testid="`chart-${name}`" :aria-label="title" role="img" class="flex flex-col gap-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
-            <figcaption class="font-medium text-neutral-900">{{ title }}</figcaption>
+            <figcaption class="font-medium text-foreground">{{ title }}</figcaption>
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span v-for="s in series" :key="s.key" class="inline-flex items-center gap-1.5 text-xs text-neutral-500">
+                <span v-for="s in series" :key="s.key" class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                     <span class="size-2 rounded-full" :style="{ backgroundColor: s.color }" />
                     {{ s.label }}
                 </span>
             </div>
         </div>
 
-        <p v-if="empty" class="py-8 text-center text-neutral-400">No data yet</p>
+        <p v-if="empty" class="py-8 text-center text-muted-foreground">No data yet</p>
         <div v-else class="h-64 w-full">
             <Line :data="data" :options="options" />
         </div>

@@ -21,14 +21,14 @@ defineProps({
             preserve-state
             aria-label="Previous page"
             data-testid="page-prev"
-            class="inline-flex items-center justify-center rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+            class="inline-flex items-center justify-center rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
             <ChevronLeft class="mr-1 size-4" />
             Prev
         </Link>
 
         <!-- Indikator Halaman Aktif -->
-        <span class="inline-flex items-center justify-center rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white">
+        <span class="inline-flex items-center justify-center rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background">
             {{ meta.current_page }} / {{ meta.last_page }}
         </span>
 
@@ -40,7 +40,7 @@ defineProps({
             preserve-state
             aria-label="Next page"
             data-testid="page-next"
-            class="inline-flex items-center justify-center rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+            class="inline-flex items-center justify-center rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
             Next
             <ChevronRight class="ml-1 size-4" />

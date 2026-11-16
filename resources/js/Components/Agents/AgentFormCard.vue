@@ -162,8 +162,8 @@ onBeforeUnmount(resetPreview)
                 </DialogDescription>
             </DialogHeader>
 
-            <p v-if="loadError" class="text-sm text-red-600">{{ loadError }}</p>
-            <p v-else-if="loading" class="text-sm text-neutral-500">Loading agent data...</p>
+            <p v-if="loadError" class="text-sm text-destructive">{{ loadError }}</p>
+            <p v-else-if="loading" class="text-sm text-muted-foreground">Loading agent data...</p>
 
             <form data-testid="agent-form" class="grid gap-6" @submit.prevent="submit">
                 <AgentFormSection title="Identity" description="Primary agent data.">
@@ -237,7 +237,7 @@ onBeforeUnmount(resetPreview)
                             type="file"
                             accept="image/jpeg,image/png,image/webp"
                             data-testid="agent-form-avatar"
-                            class="block w-full text-sm text-neutral-600 file:mr-3 file:rounded-md file:border-0 file:bg-neutral-100 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-neutral-200"
+                            class="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-accent"
                             @input="setAvatar"
                         />
                         <img

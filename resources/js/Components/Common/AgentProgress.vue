@@ -10,18 +10,18 @@ const percent = computed(() => Math.min(Math.round((props.achieved / props.targe
 </script>
 
 <template>
-    <div class="rounded-lg border bg-white p-4" data-testid="agent-progress">
+    <div class="rounded-lg border border-border bg-card p-4" data-testid="agent-progress">
         <div class="flex flex-wrap items-center justify-between gap-2">
-            <p class="font-medium text-neutral-900">Progress Agent</p>
-            <p class="text-sm text-neutral-500">
+            <p class="font-medium text-foreground">Progress Agent</p>
+            <p class="text-sm text-muted-foreground">
                 {{ achieved }} of {{ target }} agent
-                <span class="ml-1 font-medium text-neutral-900">{{ percent }}%</span>
+                <span class="ml-1 font-medium text-foreground">{{ percent }}%</span>
             </p>
         </div>
 
         <div
             role="progressbar"
-            class="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-neutral-100"
+            class="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-muted"
             aria-label="Progress target agent"
             :aria-valuenow="achieved"
             aria-valuemin="0"

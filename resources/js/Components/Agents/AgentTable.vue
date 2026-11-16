@@ -4,10 +4,10 @@ import CopyButton from '@/Components/Common/CopyButton.vue'
 
 // sama persis dengan App\Enums\AccountStatus (dipakai form add/edit agent)
 const statusConfig = {
-    logged_in:  { label: 'Logged in',  color: 'bg-green-50 text-green-700 border-green-200', icon: CheckCircle },
-    registered: { label: 'Registered', color: 'bg-yellow-50 text-yellow-700 border-yellow-200', icon: Clock },
-    recovered:  { label: 'Recovered',  color: 'bg-blue-50 text-blue-700 border-blue-200', icon: RefreshCw },
-    trouble:    { label: 'Trouble',    color: 'bg-red-50 text-red-700 border-red-200', icon: XCircle },
+    logged_in:  { label: 'Logged in',  color: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-900', icon: CheckCircle },
+    registered: { label: 'Registered', color: 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-300 dark:border-yellow-900', icon: Clock },
+    recovered:  { label: 'Recovered',  color: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900', icon: RefreshCw },
+    trouble:    { label: 'Trouble',    color: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900', icon: XCircle },
 }
 
 const props = defineProps({
@@ -44,10 +44,10 @@ const getStatusPercentage = (agent) => {
 
 // Helper: warna persentase
 const getPercentageColor = (percentage) => {
-    if (percentage === 100) return 'text-green-600'
-    if (percentage >= 50) return 'text-yellow-600'
-    if (percentage > 0) return 'text-orange-600'
-    return 'text-red-600'
+    if (percentage === 100) return 'text-green-600 dark:text-green-400'
+    if (percentage >= 50) return 'text-yellow-600 dark:text-yellow-400'
+    if (percentage > 0) return 'text-orange-600 dark:text-orange-400'
+    return 'text-red-600 dark:text-red-400'
 }
 </script>
 
@@ -57,7 +57,7 @@ const getPercentageColor = (percentage) => {
             v-for="agent in agents"
             :key="agent.id"
             :data-testid="`agent-card-${agent.id}`"
-            class="rounded-lg border bg-white p-4"
+            class="rounded-lg border border-border bg-card p-4"
         >
             <div class="flex items-start gap-3">
                 <img
@@ -66,18 +66,18 @@ const getPercentageColor = (percentage) => {
                     :alt="`Avatar ${agent.name}`"
                     class="size-10 shrink-0 rounded-full object-cover"
                 />
-                <div v-else class="flex size-10 shrink-0 items-center justify-center rounded-full bg-neutral-200 font-bold text-neutral-600">
+                <div v-else class="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted font-bold text-muted-foreground">
                     {{ agent.name.charAt(0).toUpperCase() }}
                 </div>
 
                 <div class="min-w-0 flex-1">
-                    <p class="truncate font-medium text-neutral-900">{{ agent.name }}</p>
-                    <p class="truncate text-xs text-neutral-500">Device : {{ agent.device_user || '-' }}</p>
-                    <p class="text-xs text-neutral-400">Created at: {{ agent.created_at ? new Date(agent.created_at + 'T00:00:00').toLocaleDateString('en-GB') : '-' }}</p>
+                    <p class="truncate font-medium text-foreground">{{ agent.name }}</p>
+                    <p class="truncate text-xs text-muted-foreground">Device : {{ agent.device_user || '-' }}</p>
+                    <p class="text-xs text-muted-foreground/70">Created at: {{ agent.created_at ? new Date(agent.created_at + 'T00:00:00').toLocaleDateString('en-GB') : '-' }}</p>
                 </div>
 
                 <div class="flex shrink-0 items-center gap-1.5">
-                    <span class="size-1.5 rounded-full" :class="getPercentageColor(getStatusPercentage(agent)).replace('text-', 'bg-')" />
+                    <span class="size-1.5 rounded-full" :class="getPercentageColor(getStatusPercentage(agent)).replaceAll('text-', 'bg-')" />
                     <span class="font-mono text-sm font-medium" :class="getPercentageColor(getStatusPercentage(agent))">
                         {{ getStatusPercentage(agent) }}%
                     </span>
@@ -86,7 +86,7 @@ const getPercentageColor = (percentage) => {
                         type="button"
                         :aria-label="`Edit profile ${agent.name}`"
                         :data-testid="`agent-open-mobile-${agent.id}`"
-                        class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                        class="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                         @click="emit('open', agent.id)"
                     >
                         <MoreVertical class="size-4" />
@@ -94,14 +94,14 @@ const getPercentageColor = (percentage) => {
                 </div>
             </div>
 
-            <div class="mt-3 flex flex-wrap items-center gap-1.5 border-t border-neutral-100 pt-3">
+            <div class="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
                 <div
                     v-for="p in platforms"
                     :key="p.id"
                     class="group inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs"
                     :class="getStatus(agent, p.slug)
                         ? statusConfig[getStatus(agent, p.slug)].color
-                        : 'bg-neutral-50 text-neutral-500 border-neutral-200'"
+                        : 'bg-muted text-muted-foreground border-border'"
                     :title="getStatus(agent, p.slug)
                         ? statusConfig[getStatus(agent, p.slug)].label
                         : 'Not registered'"
@@ -118,7 +118,7 @@ const getPercentageColor = (percentage) => {
 
                     <span
                         v-if="getAgentPlatform(agent, p.slug)?.identifier"
-                        class="text-neutral-300 px-0.5"
+                        class="text-muted-foreground/50 px-0.5"
                     >|</span>
 
                     <CopyButton
@@ -132,14 +132,14 @@ const getPercentageColor = (percentage) => {
             </div>
         </article>
 
-        <p v-if="!agents.length" class="py-8 text-center text-neutral-400">
+        <p v-if="!agents.length" class="py-8 text-center text-muted-foreground">
             No agents yet
         </p>
     </div>
 
-    <div class="hidden overflow-x-auto rounded-lg border bg-white md:block">
+    <div class="hidden overflow-x-auto rounded-lg border border-border bg-card md:block">
         <table class="w-full whitespace-nowrap text-left">
-            <thead class="border-b bg-neutral-50 text-xs uppercase text-neutral-500">
+            <thead class="border-b border-border bg-muted/50 text-xs uppercase text-muted-foreground">
                 <tr>
                     <th class="px-4 py-3 font-medium">Name</th>
                     <th class="px-4 py-3 font-medium">Complete</th>
@@ -152,7 +152,7 @@ const getPercentageColor = (percentage) => {
                     v-for="agent in agents" 
                     :key="agent.id" 
                     :data-testid="`agent-row-${agent.id}`" 
-                    class="hover:bg-neutral-50"
+                    class="hover:bg-muted/50"
                 >
                     <!-- Name Column -->
                     <td class="px-4 py-3">
@@ -163,13 +163,13 @@ const getPercentageColor = (percentage) => {
                                 :alt="`Avatar ${agent.name}`"
                                 class="size-10 shrink-0 rounded-full object-cover"
                             />
-                            <div v-else class="size-10 shrink-0 rounded-full bg-neutral-200 flex items-center justify-center text-neutral-600 font-bold">
+                            <div v-else class="size-10 shrink-0 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-bold">
                                 {{ agent.name.charAt(0).toUpperCase() }}
                             </div>
                             <div>
-                                <div class="font-medium text-neutral-900">{{ agent.name }}</div>
-                                <div class="text-xs text-neutral-500">Device : {{ agent.device_user || '-' }}</div>
-                                <div class="text-xs text-neutral-400">Created at: {{ agent.created_at ? new Date(agent.created_at + 'T00:00:00').toLocaleDateString('en-GB') : '-' }}</div>
+                                <div class="font-medium text-foreground">{{ agent.name }}</div>
+                                <div class="text-xs text-muted-foreground">Device : {{ agent.device_user || '-' }}</div>
+                                <div class="text-xs text-muted-foreground/70">Created at: {{ agent.created_at ? new Date(agent.created_at + 'T00:00:00').toLocaleDateString('en-GB') : '-' }}</div>
                             </div>
                         </div>
                     </td>
@@ -177,7 +177,7 @@ const getPercentageColor = (percentage) => {
                     <!-- Complete Rate Column -->
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-1.5">
-                            <span class="size-1.5 rounded-full" :class="getPercentageColor(getStatusPercentage(agent)).replace('text-', 'bg-')" />
+                            <span class="size-1.5 rounded-full" :class="getPercentageColor(getStatusPercentage(agent)).replaceAll('text-', 'bg-')" />
                             <span class="font-mono text-sm font-medium" :class="getPercentageColor(getStatusPercentage(agent))">
                                 {{ getStatusPercentage(agent) }}%
                             </span>
@@ -193,7 +193,7 @@ const getPercentageColor = (percentage) => {
                                 class="group inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs"
                                 :class="getStatus(agent, p.slug) 
                                     ? statusConfig[getStatus(agent, p.slug)].color 
-                                    : 'bg-neutral-50 text-neutral-500 border-neutral-200'"
+                                    : 'bg-muted text-muted-foreground border-border'"
                                 :title="getStatus(agent, p.slug) 
                                     ? statusConfig[getStatus(agent, p.slug)].label 
                                     : 'Not registered'"
@@ -210,7 +210,7 @@ const getPercentageColor = (percentage) => {
                                 
                                 <span 
                                     v-if="getAgentPlatform(agent, p.slug)?.identifier" 
-                                    class="text-neutral-300 px-0.5"
+                                    class="text-muted-foreground/50 px-0.5"
                                 >|</span>
                                 
                                 <CopyButton
@@ -231,7 +231,7 @@ const getPercentageColor = (percentage) => {
                             type="button"
                             :aria-label="`Edit profile ${agent.name}`"
                             :data-testid="`agent-open-${agent.id}`"
-                            class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                            class="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                             @click="emit('open', agent.id)"
                         >
                             <MoreVertical class="size-4" />
@@ -241,7 +241,7 @@ const getPercentageColor = (percentage) => {
 
                 <!-- Empty State -->
                 <tr v-if="!agents.length">
-                    <td colspan="4" class="py-12 text-center text-neutral-400">
+                    <td colspan="4" class="py-12 text-center text-muted-foreground">
                         No agents yet
                     </td>
                 </tr>

@@ -22,7 +22,7 @@ const copy = async () => {
         type="button"
         :data-testid="`copy-${testId ?? label}`"
         :aria-label="`Copy ${label}`"
-        class="inline-flex size-6 shrink-0 items-center justify-center rounded text-neutral-500 hover:text-neutral-900"
+        class="inline-flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:text-foreground"
         @click="copy"
     >
         <component :is="copied ? Check : Copy" class="size-4" />

@@ -18,7 +18,7 @@ const STATUSES = [
 
 <template>
     <div class="grid gap-3">
-        <div class="hidden gap-3 text-xs font-medium uppercase text-neutral-500 sm:grid sm:grid-cols-[6rem_1fr_1fr_8.5rem]">
+        <div class="hidden gap-3 text-xs font-medium uppercase text-muted-foreground sm:grid sm:grid-cols-[6rem_1fr_1fr_8.5rem]">
             <span>Platform</span>
             <span>Identifier</span>
             <span>Password</span>
@@ -30,7 +30,7 @@ const STATUSES = [
             :key="platform.id"
             class="grid gap-3 border-b pb-3 last:border-b-0 last:pb-0 sm:grid-cols-[6rem_1fr_1fr_8.5rem] sm:items-start sm:border-b-0 sm:pb-0"
         >
-            <div class="pt-1 text-sm font-medium text-neutral-900">{{ platform.name }}</div>
+            <div class="pt-1 text-sm font-medium text-foreground">{{ platform.name }}</div>
 
             <div class="grid gap-1">
                 <Input
