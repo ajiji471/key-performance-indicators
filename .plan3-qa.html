@@ -1,0 +1,56 @@
+<!doctype html>
+<html class="dark" lang="id">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>KPI rendering QA — synthetic props</title><link rel="preconnect" href="https://fonts.bunny.net"><link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet"></head>
+<body class="font-sans antialiased"><div id="app"></div>
+<script type="module">
+import '/resources/css/app.css';
+import { createApp, h } from 'vue';
+import { createInertiaApp } from '@inertiajs/vue3';
+import Index from '/resources/js/Pages/Kpi/Index.vue';
+const mode = new URLSearchParams(location.search).get('mode') || 'all';
+const periodLabels = { today: 'Hari ini', week: 'Minggu ini', month: 'Bulan ini', all: 'Total' };
+const periods = Object.fromEntries(Object.entries(periodLabels).map(([key, label]) => [key, { label, from: null, until: null }]));
+const metrics = (credits = 0, login = 0) => ({ email_registered: credits, email_login: login, agent_registered: credits / 7, agent_login: login / 7, registered_credits: credits, login_credits: login });
+const profile = (id, name, deleted = false, populated = false) => ({ inputer_id: id, name, is_deleted: deleted, periods: Object.fromEntries(Object.keys(periods).map((key, i) => [key, populated ? metrics([1, 7, 21, 1234567][i], [0, 1, 7, 7654321][i]) : metrics()])) });
+const inputers = mode === 'empty' ? [] : mode === 'self' ? [profile(1, 'Inputer QA')] : mode === 'zero' ? [profile(1, 'Inputer QA'), profile(2, 'Inputer Tanpa Kredit')] : [profile(1, 'Inputer QA', false, true), profile(2, 'NamaInputerSangatPanjangTanpaSpasiUntukMengujiPembungkusanTeksPadaLayarSempit'), profile(9001, 'Inputer tidak tersedia', true)];
+if (mode === 'all') inputers[2].periods.all = metrics(0, 1);
+const kpi = { scope: mode === 'self' ? 'self' : 'all', timezone: 'UTC', has_activity: mode === 'all', periods, inputers };
+const routePaths = { dashboard: '/dashboard', kpi: '/kpi', 'profile.edit': '/profile', logout: '/logout', login: '/login' };
+window.route = name => name ? routePaths[name] : { current: pattern => pattern === 'kpi' };
+window.qaErrors = [];
+window.addEventListener('error', event => window.qaErrors.push(event.message));
+window.addEventListener('unhandledrejection', event => window.qaErrors.push(String(event.reason)));
+await createInertiaApp({
+    page: { component: 'Kpi/Index', url: location.pathname + location.search, version: null, props: { auth: { user: { id: 1, name: 'Inputer QA', role: mode === 'self' ? 'user' : 'admin' } }, kpi } },
+    resolve: () => Index,
+    setup({ el, App, props, plugin }) {
+        const app = createApp({ render: () => h(App, props) });
+        app.config.globalProperties.route = window.route;
+        app.config.errorHandler = error => window.qaErrors.push(error.message);
+        return app.use(plugin).mount(el);
+    },
+});
+window.qaInspect = () => {
+    const cards = [...document.querySelectorAll('[data-testid="inputer-kpi-card"]')];
+    const first = cards[0];
+    const panels = first ? [...first.querySelectorAll('section[data-testid^="kpi-period-"]')] : [];
+    return {
+        mode,
+        viewport: innerWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+        h1: document.querySelectorAll('h1').length,
+        cards: cards.length,
+        headings: cards.map(card => card.querySelector('h2')?.textContent),
+        periods: panels.map(panel => ({ title: panel.querySelector('h3')?.textContent, text: panel.innerText, x: panel.getBoundingClientRect().x, y: panel.getBoundingClientRect().y })),
+        tables: document.querySelectorAll('table').length,
+        captionCount: document.querySelectorAll('table caption').length,
+        unscopedHeaders: document.querySelectorAll('th:not([scope])').length,
+        overflow: [...document.querySelectorAll('main *')].filter(el => el.clientWidth > 0 && el.scrollWidth > el.clientWidth + 1).map(el => ({ tag: el.tagName, text: el.textContent.slice(0, 70), client: el.clientWidth, scroll: el.scrollWidth })).slice(0, 10),
+        emptyNotice: document.body.innerText.includes('Belum ada kredit tercatat'),
+        emptyProfiles: document.body.innerText.includes('Belum ada profil inputer'),
+        selfLabel: document.body.innerText.includes('Profil Anda'),
+        errors: window.qaErrors,
+    };
+};
+window.qaReady = true;
+</script></body></html>

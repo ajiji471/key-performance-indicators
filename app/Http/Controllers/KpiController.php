@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Role;
 use App\Services\KpiSummary;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,14 +12,12 @@ class KpiController extends Controller
 {
     public function __invoke(Request $request, KpiSummary $summary): Response
     {
-        $filters = $request->validate([
-            'period' => ['nullable', 'string', 'in:today,month,all'],
-        ]);
-        $period = $filters['period'] ?? 'month';
+        $viewer = $request->user();
+        $inputerId = match ($viewer->role) {
+            Role::Admin, Role::Auditor => null,
+            Role::User => (int) $viewer->id,
+        };
 
-        return Inertia::render('Kpi/Index', [
-            'filters' => ['period' => $period],
-            ...$summary->summarize($period),
-        ]);
+        return Inertia::render('Kpi/Index', $summary->profileCards($inputerId));
     }
 }
