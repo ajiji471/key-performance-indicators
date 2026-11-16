@@ -70,6 +70,7 @@ class AgentSeederTest extends TestCase
     public function test_seeder_aman_dijalankan_ulang(): void
     {
         $this->seed(AgentSeeder::class);
+        $this->assertDatabaseEmpty('account_stage_credits');
 
         $agents = Agent::count();
         $accounts = AgentAccount::count();
@@ -79,5 +80,6 @@ class AgentSeederTest extends TestCase
         $this->assertSame($agents, Agent::count());
         $this->assertSame($accounts, AgentAccount::count());
         $this->assertDatabaseCount('agents', 118);
+        $this->assertDatabaseEmpty('account_stage_credits');
     }
 }

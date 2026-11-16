@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AccountStatus;
 use App\Http\Requests\StoreAgentRequest;
 use App\Http\Requests\UpdateAgentRequest;
 use App\Models\Agent;
+use App\Models\User;
+use App\Services\AccountStageCreditRecorder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +17,8 @@ use Throwable;
 
 class AgentController extends Controller
 {
+    public function __construct(private AccountStageCreditRecorder $credits) {}
+
     public function store(StoreAgentRequest $request): RedirectResponse
     {
         $data = $request->validated();
@@ -44,8 +49,9 @@ class AgentController extends Controller
                     'created_by'  => $request->user()->id,
                 ]);
 
-                if ($accounts !== []) {
-                    $agent->accounts()->createMany($accounts);
+                foreach ($accounts as $attributes) {
+                    $account = $agent->accounts()->create(['status' => AccountStatus::Registered, ...$attributes]);
+                    $this->credits->record($account, $request->user(), null);
                 }
             });
         } catch (Throwable $e) {
@@ -122,7 +128,8 @@ class AgentController extends Controller
         $avatarPath = $request->file('avatar')?->store('agents/avatars', 'public');
 
         try {
-            DB::transaction(function () use ($agent, $data, $accounts, $hasAccounts, $avatarPath) {
+            DB::transaction(function () use ($agent, $data, $accounts, $hasAccounts, $avatarPath, $request) {
+                $agent = Agent::query()->lockForUpdate()->findOrFail($agent->id);
                 $agent->fill($data);
 
                 if ($avatarPath) {
@@ -132,7 +139,7 @@ class AgentController extends Controller
                 $agent->save();
 
                 if ($hasAccounts) {
-                    $this->syncAccounts($agent, $accounts);
+                    $this->syncAccounts($agent, $accounts, $request->user());
                 }
             });
         } catch (Throwable $e) {
@@ -155,7 +162,7 @@ class AgentController extends Controller
      *
      * @param  array<int, array{platform_id:int, identifier:string, password:string, status:string}>  $rows
      */
-    private function syncAccounts(Agent $agent, array $rows): void
+    private function syncAccounts(Agent $agent, array $rows, User $inputer): void
     {
         foreach ($rows as $row) {
             $existing = $agent->accounts()->where('platform_id', $row['platform_id'])->first();
@@ -176,9 +183,20 @@ class AgentController extends Controller
                 $attributes['status'] = $row['status'];
             }
 
-            $existing
-                ? $existing->fill($attributes)->save()
-                : $agent->accounts()->create([...$attributes, 'platform_id' => $row['platform_id']]);
+            $previousStatus = $existing?->status;
+
+            if ($existing) {
+                $existing->fill($attributes)->save();
+                $account = $existing;
+            } else {
+                $account = $agent->accounts()->create([
+                    'status' => AccountStatus::Registered,
+                    ...$attributes,
+                    'platform_id' => $row['platform_id'],
+                ]);
+            }
+
+            $this->credits->record($account, $inputer, $previousStatus);
         }
     }
 

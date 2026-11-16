@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\AccountStatus;
 use App\Models\Agent;
 use App\Models\AgentAccount;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -30,6 +31,7 @@ class UpdateAgentAccountRequest extends FormRequest
             ],
             'identifier'  => ['required', 'string', 'max:255'],
             'password'    => ['nullable', 'string', 'max:255'],
+            'status'      => ['nullable', Rule::enum(AccountStatus::class)],
         ];
     }
 
