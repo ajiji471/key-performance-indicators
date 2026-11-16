@@ -17,7 +17,7 @@ class AgentSeederTest extends TestCase
         $this->seed(AgentSeeder::class);
 
         $this->assertDatabaseCount('agents', 118);
-        $this->assertDatabaseHas('users', ['email' => 'admin@example.com']);
+        $this->assertDatabaseHas('users', ['email' => config('seed.admin.email')]);
 
         $agent = Agent::with('accounts.platform')
             ->where('name', 'AS1-001 - Made Neelson')

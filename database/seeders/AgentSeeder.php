@@ -17,10 +17,10 @@ class AgentSeeder extends Seeder
     private const PLATFORMS = ['google', 'youtube', 'facebook', 'instagram', 'x', 'tiktok', 'pinterest'];
 
     private const STATUSES = [
-        'logged in'  => 'logged_in',
+        'logged in' => 'logged_in',
         'registered' => 'registered',
-        'trouble'    => 'trouble',
-        'fixing'     => 'trouble',
+        'trouble' => 'trouble',
+        'fixing' => 'trouble',
     ];
 
     public function run(): void
@@ -28,12 +28,12 @@ class AgentSeeder extends Seeder
         $this->call(PlatformSeeder::class);
 
         $admin = User::firstOrCreate(
-            ['email' => 'admin@example.com'],
+            ['email' => config('seed.admin.email')],
             [
-                'name'       => 'Admin',
-                'password'   => Hash::make('password'),
-                'role'       => Role::Admin,
-                'is_active'  => true,
+                'name' => 'Admin',
+                'password' => Hash::make(config('seed.admin.password')),
+                'role' => Role::Admin,
+                'is_active' => true,
             ],
         );
 
@@ -60,12 +60,12 @@ class AgentSeeder extends Seeder
         $agent = Agent::updateOrCreate(
             ['name' => trim($row['name'])],
             [
-                'email'          => $email,
+                'email' => $email,
                 'recovery_email' => $recoveryEmail,
-                'password'       => $row['password'],
-                'context'        => $row['remark'],
-                'birth_date'     => $this->birthDate($row['remark']),
-                'created_by'     => $admin->id,
+                'password' => $row['password'],
+                'context' => $row['remark'],
+                'birth_date' => $this->birthDate($row['remark']),
+                'created_by' => $admin->id,
             ],
         );
 
@@ -86,8 +86,8 @@ class AgentSeeder extends Seeder
                 ['platform_id' => $platforms[$slug]],
                 [
                     'identifier' => $slug === 'google' ? $ids[0] : implode(' | ', $ids),
-                    'password'   => $row['password'],
-                    'status'     => self::STATUSES[$status] ?? 'registered',
+                    'password' => $row['password'],
+                    'status' => self::STATUSES[$status] ?? 'registered',
                 ],
             );
         }
