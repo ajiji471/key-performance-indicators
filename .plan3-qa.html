@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="dark" lang="id">
+<html class="dark" lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>KPI rendering QA — synthetic props</title><link rel="preconnect" href="https://fonts.bunny.net"><link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet"></head>
 <body class="font-sans antialiased"><div id="app"></div>
 <script type="module">
@@ -8,11 +8,11 @@ import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import Index from '/resources/js/Pages/Kpi/Index.vue';
 const mode = new URLSearchParams(location.search).get('mode') || 'all';
-const periodLabels = { today: 'Hari ini', week: 'Minggu ini', month: 'Bulan ini', all: 'Total' };
+const periodLabels = { today: 'Today', week: 'This week', month: 'This month', all: 'Total' };
 const periods = Object.fromEntries(Object.entries(periodLabels).map(([key, label]) => [key, { label, from: null, until: null }]));
 const metrics = (credits = 0, login = 0) => ({ email_registered: credits, email_login: login, agent_registered: credits / 7, agent_login: login / 7, registered_credits: credits, login_credits: login });
 const profile = (id, name, deleted = false, populated = false) => ({ inputer_id: id, name, is_deleted: deleted, periods: Object.fromEntries(Object.keys(periods).map((key, i) => [key, populated ? metrics([1, 7, 21, 1234567][i], [0, 1, 7, 7654321][i]) : metrics()])) });
-const inputers = mode === 'empty' ? [] : mode === 'self' ? [profile(1, 'Inputer QA')] : mode === 'zero' ? [profile(1, 'Inputer QA'), profile(2, 'Inputer Tanpa Kredit')] : [profile(1, 'Inputer QA', false, true), profile(2, 'NamaInputerSangatPanjangTanpaSpasiUntukMengujiPembungkusanTeksPadaLayarSempit'), profile(9001, 'Inputer tidak tersedia', true)];
+const inputers = mode === 'empty' ? [] : mode === 'self' ? [profile(1, 'Inputer QA')] : mode === 'zero' ? [profile(1, 'Inputer QA'), profile(2, 'Inputer Without Credits')] : [profile(1, 'Inputer QA', false, true), profile(2, 'AVeryLongInputerNameWithoutSpacesToTestTextWrappingOnNarrowScreens'), profile(9001, 'Inputer unavailable', true)];
 if (mode === 'all') inputers[2].periods.all = metrics(0, 1);
 const kpi = { scope: mode === 'self' ? 'self' : 'all', timezone: 'UTC', has_activity: mode === 'all', periods, inputers };
 const routePaths = { dashboard: '/dashboard', kpi: '/kpi', 'profile.edit': '/profile', logout: '/logout', login: '/login' };
@@ -34,6 +34,7 @@ window.qaInspect = () => {
     const cards = [...document.querySelectorAll('[data-testid="inputer-kpi-card"]')];
     const first = cards[0];
     const panels = first ? [...first.querySelectorAll('section[data-testid^="kpi-period-"]')] : [];
+    const text = document.body.innerText;
     return {
         mode,
         viewport: innerWidth,
@@ -46,9 +47,14 @@ window.qaInspect = () => {
         captionCount: document.querySelectorAll('table caption').length,
         unscopedHeaders: document.querySelectorAll('th:not([scope])').length,
         overflow: [...document.querySelectorAll('main *')].filter(el => el.clientWidth > 0 && el.scrollWidth > el.clientWidth + 1).map(el => ({ tag: el.tagName, text: el.textContent.slice(0, 70), client: el.clientWidth, scroll: el.scrollWidth })).slice(0, 10),
-        emptyNotice: document.body.innerText.includes('Belum ada kredit tercatat'),
-        emptyProfiles: document.body.innerText.includes('Belum ada profil inputer'),
-        selfLabel: document.body.innerText.includes('Profil Anda'),
+        emptyNotice: text.includes('No credits recorded yet'),
+        emptyProfiles: text.includes('No inputer profiles yet'),
+        selfLabel: text.includes('Your profile'),
+        deletedLabel: text.includes('Deleted history · ID 9001'),
+        englishLabels: ['Today', 'This week', 'This month', 'Total', 'Metric', 'platform credits', 'Time zone: UTC', 'Weeks run Monday–Sunday'].every(s => text.includes(s)),
+        enNumbers: text.includes('1,234,567') && text.includes('7,654,321') && text.includes('176,366.71'),
+        idNumbersLeftover: text.includes('1.234.567') || text.includes('176.366,71'),
+        indoLeftover: ['Hari ini', 'Minggu ini', 'Bulan ini', 'Metrik', 'kredit platform', 'Profil Anda', 'Belum ada', 'Zona waktu', 'Menampilkan', 'Histori terhapus'].filter(s => text.includes(s)),
         errors: window.qaErrors,
     };
 };

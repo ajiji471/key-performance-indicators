@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\Role;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -38,10 +39,13 @@ class KpiSummary
             ->get()
             ->keyBy('inputer_id');
 
-        $users = User::query()
+        $people = User::query()
             ->when($inputerId !== null, fn ($query) => $query->whereKey($inputerId))
-            ->get(['id', 'name'])
+            ->get(['id', 'name', 'role'])
             ->keyBy('id');
+        $users = $people->filter(fn ($person) => $person->role === Role::User);
+        $nonInputers = $people->reject(fn ($person) => $person->role === Role::User)->keys();
+        $totals = $totals->reject(fn ($row, $id) => $nonInputers->contains($id));
         $inputers = $users->keys()->merge($totals->keys())->unique()->map(function ($id) use ($users, $totals) {
             $user = $users->get($id);
             $total = $totals->get($id);
@@ -53,7 +57,7 @@ class KpiSummary
 
             return [
                 'inputer_id' => (int) $id,
-                'name' => $user?->name ?? 'Inputer tidak tersedia',
+                'name' => $user?->name ?? 'Inputer unavailable',
                 'is_deleted' => $user === null,
                 'active_days' => $days,
                 'email_registered' => [
@@ -105,7 +109,7 @@ class KpiSummary
     public function profileCards(?int $inputerId): array
     {
         $at = CarbonImmutable::now(config('app.timezone'));
-        $labels = ['today' => 'Hari ini', 'week' => 'Minggu ini', 'month' => 'Bulan ini', 'all' => 'Total'];
+        $labels = ['today' => 'Today', 'week' => 'This week', 'month' => 'This month', 'all' => 'Total'];
         $reports = [];
         $periods = [];
         $rows = [];

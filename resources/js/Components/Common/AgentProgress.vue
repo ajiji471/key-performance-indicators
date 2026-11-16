@@ -12,9 +12,9 @@ const percent = computed(() => Math.min(Math.round((props.achieved / props.targe
 <template>
     <div class="rounded-lg border border-border bg-card p-4" data-testid="agent-progress">
         <div class="flex flex-wrap items-center justify-between gap-2">
-            <p class="font-medium text-foreground">Progress Agent</p>
+            <p class="font-medium text-foreground">Agent progress</p>
             <p class="text-sm text-muted-foreground">
-                {{ achieved }} of {{ target }} agent
+                {{ achieved }} of {{ target }} agents
                 <span class="ml-1 font-medium text-foreground">{{ percent }}%</span>
             </p>
         </div>
@@ -22,7 +22,7 @@ const percent = computed(() => Math.min(Math.round((props.achieved / props.targe
         <div
             role="progressbar"
             class="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-muted"
-            aria-label="Progress target agent"
+            aria-label="Agent target progress"
             :aria-valuenow="achieved"
             aria-valuemin="0"
             :aria-valuemax="target"

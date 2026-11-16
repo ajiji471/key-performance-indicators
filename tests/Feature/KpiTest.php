@@ -92,7 +92,7 @@ class KpiTest extends TestCase
     }
 
     #[DataProvider('privilegedRoles')]
-    public function test_admin_dan_auditor_menerima_semua_profil_termasuk_diri_dan_user_nol(Role $role): void
+    public function test_admin_dan_auditor_menerima_semua_profil_inputer_tanpa_diri_sendiri(Role $role): void
     {
         $this->travelTo(CarbonImmutable::parse('2026-11-18 12:00:00', 'UTC'));
         $viewer = User::factory()->create(['role' => $role, 'name' => 'B Viewer']);
@@ -106,14 +106,12 @@ class KpiTest extends TestCase
             ->component('Kpi/Index')
             ->where('kpi.scope', 'all')
             ->where('kpi.has_activity', true)
-            ->has('kpi.inputers', 3)
+            ->has('kpi.inputers', 2)
             ->where('kpi.inputers.0.inputer_id', $inputer->id)
             ->where('kpi.inputers.0.periods.all.email_registered', 1)
-            ->where('kpi.inputers.1.inputer_id', $viewer->id)
-            ->where('kpi.inputers.1.periods.all.email_registered', 1)
-            ->where('kpi.inputers.2.inputer_id', $zero->id)
-            ->where('kpi.inputers.2.periods.all.email_registered', 0)
-            ->where('kpi.inputers.2.is_deleted', false));
+            ->where('kpi.inputers.1.inputer_id', $zero->id)
+            ->where('kpi.inputers.1.periods.all.email_registered', 0)
+            ->where('kpi.inputers.1.is_deleted', false));
     }
 
     #[DataProvider('privilegedRoles')]
@@ -128,14 +126,14 @@ class KpiTest extends TestCase
         $this->actingAs($viewer)->get('/kpi')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->where('kpi.scope', 'all')
             ->where('kpi.has_activity', true)
-            ->has('kpi.inputers', 2)
-            ->where('kpi.inputers.1.inputer_id', $deleted->id)
-            ->where('kpi.inputers.1.name', 'Inputer tidak tersedia')
-            ->where('kpi.inputers.1.is_deleted', true)
-            ->where('kpi.inputers.1.periods.today.email_registered', 0)
-            ->where('kpi.inputers.1.periods.week.email_registered', 0)
-            ->where('kpi.inputers.1.periods.month.email_registered', 0)
-            ->where('kpi.inputers.1.periods.all.email_registered', 1));
+            ->has('kpi.inputers', 1)
+            ->where('kpi.inputers.0.inputer_id', $deleted->id)
+            ->where('kpi.inputers.0.name', 'Inputer unavailable')
+            ->where('kpi.inputers.0.is_deleted', true)
+            ->where('kpi.inputers.0.periods.today.email_registered', 0)
+            ->where('kpi.inputers.0.periods.week.email_registered', 0)
+            ->where('kpi.inputers.0.periods.month.email_registered', 0)
+            ->where('kpi.inputers.0.periods.all.email_registered', 1));
     }
 
     public static function privilegedRoles(): array
@@ -147,6 +145,7 @@ class KpiTest extends TestCase
     {
         $this->travelTo(CarbonImmutable::parse('2026-11-18 12:00:00', 'UTC'));
         $viewer = User::factory()->create(['role' => Role::Admin]);
+        $inputer = User::factory()->create(['role' => Role::User]);
         $response = $this->actingAs($viewer)->get('/kpi')->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Kpi/Index')->has('kpi')->missing('filters')->missing('period'));
         $kpi = $response->viewData('page')['props']['kpi'];
@@ -156,9 +155,9 @@ class KpiTest extends TestCase
         $this->assertSame('UTC', $kpi['timezone']);
         $this->assertFalse($kpi['has_activity']);
         $this->assertSame([
-            'today' => ['label' => 'Hari ini', 'from' => '2026-11-18T00:00:00+00:00', 'until' => '2026-11-19T00:00:00+00:00'],
-            'week' => ['label' => 'Minggu ini', 'from' => '2026-11-16T00:00:00+00:00', 'until' => '2026-11-23T00:00:00+00:00'],
-            'month' => ['label' => 'Bulan ini', 'from' => '2026-11-01T00:00:00+00:00', 'until' => '2026-12-01T00:00:00+00:00'],
+            'today' => ['label' => 'Today', 'from' => '2026-11-18T00:00:00+00:00', 'until' => '2026-11-19T00:00:00+00:00'],
+            'week' => ['label' => 'This week', 'from' => '2026-11-16T00:00:00+00:00', 'until' => '2026-11-23T00:00:00+00:00'],
+            'month' => ['label' => 'This month', 'from' => '2026-11-01T00:00:00+00:00', 'until' => '2026-12-01T00:00:00+00:00'],
             'all' => ['label' => 'Total', 'from' => null, 'until' => null],
         ], $kpi['periods']);
         $this->assertSame(['today', 'week', 'month', 'all'], array_keys($kpi['periods']));
@@ -171,7 +170,7 @@ class KpiTest extends TestCase
             $this->assertIsInt($counts['email_registered']);
             $this->assertIsInt($counts['email_login']);
         }
-        foreach ([$viewer->email, 'password', 'identifier', 'average', 'category', 'active_days'] as $private) {
+        foreach ([$viewer->email, $inputer->email, 'password', 'identifier', 'average', 'category', 'active_days'] as $private) {
             $this->assertStringNotContainsString($private, json_encode($kpi));
         }
     }

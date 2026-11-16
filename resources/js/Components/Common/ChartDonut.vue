@@ -27,7 +27,7 @@ const empty = computed(() => props.values.every((v) => v === 0))
 <template>
     <figure :data-testid="`chart-${name}`" :aria-label="title" role="img">
         <figcaption>{{ title }}</figcaption>
-        <p v-if="empty">Belum ada data</p>
+        <p v-if="empty">No data yet</p>
         <Doughnut v-else :data="data" :options="options" />
     </figure>
 </template>

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\Role;
 use App\Models\AccountStageCredit;
 use App\Models\Agent;
 use App\Models\Platform;
@@ -205,7 +206,7 @@ class KpiSummaryTest extends TestCase
         $this->assertCount(3, $rows);
         foreach ([$a->id, $b->id] as $id) {
             $this->assertTrue($rows[$id]['is_deleted']);
-            $this->assertSame('Inputer tidak tersedia', $rows[$id]['name']);
+            $this->assertSame('Inputer unavailable', $rows[$id]['name']);
             $this->assertSame(1, $rows[$id]['agent_registered']['credits']);
         }
         $this->assertSame(1, $rows[$a->id]['email_registered']['total']);
@@ -420,7 +421,7 @@ class KpiSummaryTest extends TestCase
         $this->assertCount(1, $kpi['inputers']);
         $row = $kpi['inputers'][0];
         $this->assertSame($deleted->id, $row['inputer_id']);
-        $this->assertSame('Inputer tidak tersedia', $row['name']);
+        $this->assertSame('Inputer unavailable', $row['name']);
         $this->assertTrue($row['is_deleted']);
         $this->assertSame(1, $row['periods']['all']['email_registered']);
         foreach (['today', 'week', 'month'] as $period) {
@@ -465,6 +466,32 @@ class KpiSummaryTest extends TestCase
                 $this->assertCount($inputerId === null ? 1 + $additional : 1, $kpi['inputers']);
             }
         }
+    }
+
+    public function test_admin_dan_auditor_tidak_masuk_perhitungan_inputer(): void
+    {
+        $inputer = User::factory()->create();
+        $admin = User::factory()->create(['role' => Role::Admin]);
+        $auditor = User::factory()->create(['role' => Role::Auditor]);
+        $this->credit($inputer->id, 'google', 'registered', '2026-11-14 09:00:00', 1);
+        $this->credit($admin->id, 'google', 'registered', '2026-11-14 09:00:00', 2);
+        $this->credit($auditor->id, 'facebook', 'logged_in', '2026-11-14 09:00:00', 3);
+
+        $rows = $this->rows($this->report('all'));
+        $this->assertSame([$inputer->id], array_keys($rows));
+
+        $cards = app(KpiSummary::class)->profileCards(null)['kpi']['inputers'];
+        $this->assertSame([$inputer->id], array_column($cards, 'inputer_id'));
+    }
+
+    public function test_kredit_non_inputer_saja_tidak_menghasilkan_aktivitas(): void
+    {
+        $admin = User::factory()->create(['role' => Role::Admin]);
+        $this->credit($admin->id, 'google', 'registered', '2026-11-14 09:00:00', 1);
+
+        $report = $this->report('all');
+        $this->assertFalse($report['kpi']['has_activity']);
+        $this->assertSame([], $report['kpi']['inputers']);
     }
 
     private function report(string $period = 'month', ?int $inputerId = null): array
