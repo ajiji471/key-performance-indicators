@@ -57,7 +57,7 @@ defineProps({
 
             <footer class="space-y-1 border-t border-border pt-4 text-xs text-muted-foreground">
                 <p>7 platform credits = 1 agent. Email counts come from Google. Registered and login are recorded separately.</p>
-                <p>Data only covers credits since recording was enabled. Old data is not backfilled. Accounts recorded directly as login only earn login credits.</p>
+                <p>Totals include historical credits backfilled from agent account statuses (dated by agent creation, attributed to the creator) and new credits recorded as accounts change. An account saved directly as login earns login credit only.</p>
             </footer>
         </div>
     </AuthenticatedLayout>
