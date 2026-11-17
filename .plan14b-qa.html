@@ -1,0 +1,53 @@
+<!doctype html>
+<html class="dark" lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Plan 14 Slice B QA — status sentence</title><link rel="preconnect" href="https://fonts.bunny.net"><link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet"></head>
+<body class="font-sans antialiased"><div id="app" class="p-4"></div>
+<script type="module">
+import '/resources/css/app.css';
+import { createApp, h } from 'vue';
+import HistoryTable from '/resources/js/Components/History/HistoryTable.vue';
+
+const FB_URL = 'https://www.facebook.com/profile.php?id=61595761602291';
+const logs = [
+    { id: 10, inputer_name: 'Ajiji', action: 'updated', subject_type: 'account', agent_name: 'Aditiana Rizk', platform_slug: 'facebook', platform_name: 'Facebook', identifier: FB_URL, status_from: 'registered', status_to: 'logged_in', occurred_at: '2026-11-17T00:29:00.000000Z' },
+    { id: 11, inputer_name: 'Ajiji', action: 'updated', subject_type: 'account', agent_name: 'Aditiana Rizk', platform_slug: 'facebook', platform_name: 'Facebook', identifier: FB_URL, status_from: null, status_to: null, occurred_at: '2026-11-17T00:20:00.000000Z' },
+    { id: 12, inputer_name: 'Gasti', action: 'created', subject_type: 'account', agent_name: 'Budi', platform_slug: 'google', platform_name: 'Google', identifier: 'budi@gmail.com', status_from: null, status_to: null, occurred_at: '2026-11-16T09:00:00.000000Z' },
+    { id: 13, inputer_name: 'Ajiji', action: 'updated', subject_type: 'account', agent_name: 'Citra', platform_slug: 'google', platform_name: 'Google', identifier: 'citra@gmail.com', status_from: 'logged_in', status_to: 'trouble', occurred_at: '2026-11-16T08:00:00.000000Z' },
+    { id: 14, inputer_name: 'Gasti', action: 'updated', subject_type: 'agent', agent_name: 'Budi', platform_slug: null, platform_name: null, identifier: null, status_from: null, status_to: null, occurred_at: '2026-11-15T08:30:00.000000Z' },
+];
+
+window.qaErrors = [];
+window.addEventListener('error', (e) => window.qaErrors.push(e.message));
+window.addEventListener('unhandledrejection', (e) => window.qaErrors.push(String(e.reason)));
+
+const app = createApp({ render: () => h(HistoryTable, { logs }) });
+app.config.errorHandler = (error) => window.qaErrors.push(error.message);
+app.mount('#app');
+
+const cell = (id, index) => document.querySelector(`[data-testid="history-row-${id}"]`)?.querySelectorAll('td')[index]?.textContent.trim() ?? null;
+const card = (id) => document.querySelector(`[data-testid="history-card-${id}"]`)?.innerText.replace(/\s+/g, ' ').trim() ?? null;
+
+window.qaInspect = () => {
+    const statusSentence = cell(10, 1);
+    const text = document.body.innerText;
+    return {
+        viewport: innerWidth,
+        rowCount: document.querySelectorAll('[data-testid^="history-row-"]').length,
+        cardCount: document.querySelectorAll('[data-testid^="history-card-"]').length,
+        statusTransition: statusSentence,
+        statusTransitionNoUrl: statusSentence !== null && !statusSentence.includes('facebook.com') && !statusSentence.includes('('),
+        statusTransitionExpected: statusSentence === 'Ajiji set Facebook account to Logged in for Agent Aditiana Rizk',
+        identifierOnly: cell(11, 1),
+        identifierOnlyHasUrl: (cell(11, 1) ?? '').includes(FB_URL),
+        created: cell(12, 1),
+        troubleTransition: cell(13, 1),
+        troubleExpected: cell(13, 1) === 'Ajiji set Google account to Trouble for Agent Citra',
+        agentUpdated: cell(14, 1),
+        cardStatusTransition: card(10),
+        indoLeftover: ['mengubah', 'menetapkan', 'status', 'masuk', 'Terapkan'].filter((s) => text.toLowerCase().includes(s.toLowerCase())),
+        passwordLeak: /secret|password/i.test(text),
+        errors: window.qaErrors,
+    };
+};
+window.qaReady = true;
+</script></body></html>

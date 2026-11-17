@@ -34,6 +34,8 @@ class HistoryTest extends TestCase
             'platform_slug' => $overrides['platform_slug'] ?? null,
             'platform_name' => $overrides['platform_name'] ?? null,
             'identifier' => $overrides['identifier'] ?? null,
+            'status_from' => $overrides['status_from'] ?? null,
+            'status_to' => $overrides['status_to'] ?? null,
             'occurred_at' => $overrides['occurred_at'] ?? Carbon::parse('2026-11-17 00:29:00'),
         ]);
     }
@@ -152,6 +154,28 @@ class HistoryTest extends TestCase
                 ->has('logs.data', 1)
                 ->where('logs.data.0.identifier', 'x@example.com')
                 ->missing('logs.data.0.password')
+            );
+    }
+
+    public function test_props_status_transisi_account_updated(): void
+    {
+        $viewer = $this->viewer();
+        $this->log([
+            'action' => 'updated',
+            'subject_type' => 'account',
+            'identifier' => 'https://www.facebook.com/profile.php?id=123',
+            'platform_name' => 'Facebook',
+            'platform_slug' => 'facebook',
+            'status_from' => 'registered',
+            'status_to' => 'logged_in',
+        ]);
+
+        $this->actingAs($viewer)->get('/history')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('logs.data', 1)
+                ->where('logs.data.0.action', 'updated')
+                ->where('logs.data.0.status_from', 'registered')
+                ->where('logs.data.0.status_to', 'logged_in')
             );
     }
 }

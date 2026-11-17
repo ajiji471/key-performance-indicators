@@ -5,6 +5,13 @@ defineProps({
 
 const verbs = { created: 'added', updated: 'updated', deleted: 'deleted' }
 
+const statusLabels = {
+    registered: 'Registered',
+    logged_in: 'Logged in',
+    recovered: 'Recovered',
+    trouble: 'Trouble',
+}
+
 const whenFormatter = new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: '2-digit',
@@ -27,6 +34,13 @@ const activityText = (log) => {
     }
 
     const platform = log.platform_name ?? log.platform_slug ?? 'Platform'
+
+    if (log.action === 'updated' && log.status_to) {
+        const label = statusLabels[log.status_to] ?? log.status_to
+
+        return `${who} set ${platform} account to ${label} for Agent ${log.agent_name}`
+    }
+
     const identifier = log.identifier ? ` (${log.identifier})` : ''
 
     return `${who} ${verb} ${platform} account${identifier} for Agent ${log.agent_name}`

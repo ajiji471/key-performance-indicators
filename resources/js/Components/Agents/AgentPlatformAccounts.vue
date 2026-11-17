@@ -63,9 +63,9 @@ const STATUSES = [
                     :disabled="!form.accounts[index].identifier"
                     :aria-label="`Status ${platform.name}`"
                     :data-testid="`agent-form-account-status-${platform.id}`"
-                    class="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full min-w-0 rounded-md border bg-transparent px-2 py-1 text-sm shadow-xs outline-none focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full min-w-0 rounded-md border bg-transparent px-2 py-1 text-sm text-foreground shadow-xs outline-none focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30 dark:[color-scheme:dark]"
                 >
-                    <option v-for="s in STATUSES" :key="s.value" :value="s.value">{{ s.label }}</option>
+                    <option v-for="s in STATUSES" :key="s.value" :value="s.value" class="bg-card text-foreground">{{ s.label }}</option>
                 </select>
                 <InputError :message="form.errors[`accounts.${index}.status`]" />
             </div>

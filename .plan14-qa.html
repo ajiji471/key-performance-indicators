@@ -1,0 +1,58 @@
+<!doctype html>
+<html class="dark" lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Plan 14 QA — dark select option</title><link rel="preconnect" href="https://fonts.bunny.net"><link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet"></head>
+<body class="font-sans antialiased"><div id="app" class="p-6"></div>
+<script type="module">
+import '/resources/css/app.css';
+import { createApp, reactive, h } from 'vue';
+import AgentPlatformAccounts from '/resources/js/Components/Agents/AgentPlatformAccounts.vue';
+const platforms = [
+    { id: 1, slug: 'google', name: 'Google' },
+    { id: 2, slug: 'facebook', name: 'Facebook' },
+];
+const form = reactive({
+    accounts: platforms.map((p) => ({ platform_id: p.id, identifier: 'agent@qa.test', password: '', status: 'registered' })),
+    errors: {},
+});
+window.qaErrors = [];
+window.addEventListener('error', (e) => window.qaErrors.push(e.message));
+window.addEventListener('unhandledrejection', (e) => window.qaErrors.push(String(e.reason)));
+const app = createApp({ render: () => h(AgentPlatformAccounts, { form, platforms }) });
+app.config.errorHandler = (e) => window.qaErrors.push(e.message);
+app.mount('#app');
+const lum = (rgb) => {
+    const m = rgb.match(/\d+(\.\d+)?/g);
+    if (!m) return null;
+    const [r, g, b] = m.slice(0, 3).map((v) => {
+        const c = Number(v) / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const contrast = (a, b) => {
+    const la = lum(a), lb = lum(b);
+    if (la == null || lb == null) return null;
+    const hi = Math.max(la, lb), lo = Math.min(la, lb);
+    return Number(((hi + 0.05) / (lo + 0.05)).toFixed(2));
+};
+window.qaInspect = () => {
+    const sel = document.querySelector('[data-testid="agent-form-account-status-1"]');
+    const opt = sel?.querySelector('option');
+    const sc = sel ? getComputedStyle(sel) : null;
+    const oc = opt ? getComputedStyle(opt) : null;
+    return {
+        htmlDark: document.documentElement.classList.contains('dark'),
+        selectPresent: !!sel,
+        optionCount: sel?.querySelectorAll('option').length ?? 0,
+        optionText: opt?.textContent ?? null,
+        selectColorScheme: sc?.colorScheme ?? null,
+        selectColor: sc?.color ?? null,
+        selectBg: sc?.backgroundColor ?? null,
+        optionColor: oc?.color ?? null,
+        optionBg: oc?.backgroundColor ?? null,
+        optionContrast: oc ? contrast(oc.color, oc.backgroundColor) : null,
+        errors: window.qaErrors,
+    };
+};
+window.qaReady = true;
+</script></body></html>

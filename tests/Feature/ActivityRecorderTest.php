@@ -196,6 +196,100 @@ class ActivityRecorderTest extends TestCase
         $this->assertDatabaseCount('activity_logs', 3);
     }
 
+    public function test_update_status_standalone_mencatat_transisi(): void
+    {
+        $inputer = $this->inputer();
+        $agent = Agent::factory()->create(['name' => 'Host Agent']);
+        $platform = Platform::factory()->create(['slug' => 'facebook', 'name' => 'Facebook']);
+        $account = $agent->accounts()->create([
+            'platform_id' => $platform->id,
+            'identifier' => 'https://www.facebook.com/profile.php?id=123',
+            'status' => AccountStatus::Registered,
+        ]);
+
+        $this->actingAs($inputer)->patch("/agents/{$agent->id}/accounts/{$account->id}", [
+            'platform_id' => $platform->id,
+            'identifier' => $account->identifier,
+            'status' => 'logged_in',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertDatabaseHas('activity_logs', [
+            'action' => 'updated',
+            'subject_type' => 'account',
+            'status_from' => 'registered',
+            'status_to' => 'logged_in',
+        ]);
+        $this->assertDatabaseCount('activity_logs', 1);
+    }
+
+    public function test_update_status_inline_mencatat_transisi(): void
+    {
+        $inputer = $this->inputer();
+        $agent = Agent::factory()->create();
+        $platform = Platform::factory()->create(['slug' => 'facebook', 'name' => 'Facebook']);
+        $agent->accounts()->create([
+            'platform_id' => $platform->id,
+            'identifier' => 'fb@example.com',
+            'status' => AccountStatus::Registered,
+        ]);
+
+        $this->actingAs($inputer)->patch("/agents/{$agent->id}", [
+            'name' => $agent->name,
+            'email' => $agent->email,
+            'accounts' => [
+                ['platform_id' => $platform->id, 'identifier' => 'fb@example.com', 'password' => '', 'status' => 'logged_in'],
+            ],
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertDatabaseHas('activity_logs', [
+            'action' => 'updated',
+            'subject_type' => 'account',
+            'status_from' => 'registered',
+            'status_to' => 'logged_in',
+        ]);
+        $this->assertDatabaseCount('activity_logs', 1);
+    }
+
+    public function test_update_identifier_saja_status_kosong(): void
+    {
+        $inputer = $this->inputer();
+        $agent = Agent::factory()->create();
+        $platform = Platform::factory()->create();
+        $account = $agent->accounts()->create([
+            'platform_id' => $platform->id,
+            'identifier' => 'old@example.com',
+            'status' => AccountStatus::Registered,
+        ]);
+
+        $this->actingAs($inputer)->patch("/agents/{$agent->id}/accounts/{$account->id}", [
+            'platform_id' => $platform->id,
+            'identifier' => 'new@example.com',
+        ])->assertRedirect(route('dashboard'));
+
+        $log = ActivityLog::sole();
+        $this->assertSame('updated', $log->action->value);
+        $this->assertNull($log->status_from);
+        $this->assertNull($log->status_to);
+    }
+
+    public function test_create_account_status_kosong(): void
+    {
+        $inputer = $this->inputer();
+        $agent = Agent::factory()->create();
+        $platform = Platform::factory()->create();
+
+        $this->actingAs($inputer)->post("/agents/{$agent->id}/accounts", [
+            'platform_id' => $platform->id,
+            'identifier' => 'new@example.com',
+            'status' => 'logged_in',
+        ])->assertRedirect(route('dashboard'));
+
+        $log = ActivityLog::sole();
+        $this->assertSame('created', $log->action->value);
+        $this->assertNull($log->status_from);
+        $this->assertNull($log->status_to);
+    }
+
     public function test_inputer_atribusi_dari_sesi_bukan_client(): void
     {
         $inputer = $this->inputer('Real Inputer');

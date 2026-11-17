@@ -29,6 +29,14 @@ class ActivityRecorder
     {
         $account->loadMissing('platform');
 
+        $statusFrom = null;
+        $statusTo = null;
+
+        if ($action === ActivityAction::Updated && $account->wasChanged('status')) {
+            $statusFrom = $account->getPrevious()['status'] ?? null;
+            $statusTo = $account->status?->value;
+        }
+
         ActivityLog::create([
             'inputer_id' => $inputer->id,
             'inputer_name' => $inputer->name,
@@ -41,6 +49,8 @@ class ActivityRecorder
             'platform_slug' => $account->platform?->slug,
             'platform_name' => $account->platform?->name,
             'identifier' => $account->identifier,
+            'status_from' => $statusFrom,
+            'status_to' => $statusTo,
             'occurred_at' => now(),
         ]);
     }
