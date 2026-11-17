@@ -15,7 +15,7 @@ import {
     sidebarMenuButtonVariants,
 } from '@/Components/ui/sidebar'
 import { cn } from '@/lib/utils'
-import { ChartBar, History, LayoutDashboard, LogOut, UserRound, X } from '@lucide/vue'
+import { ChartBar, History, LayoutDashboard, LogOut, UserRound, Users, X } from '@lucide/vue'
 
 const page = usePage()
 const user = computed(() => page.props.auth.user)
@@ -50,6 +50,16 @@ const menuItems = computed(() => {
             icon: History,
             testid: 'sidebar-link-history',
         })
+
+        if (user.value.role === 'admin') {
+            items.push({
+                label: 'Accounts',
+                href: route('accounts.index'),
+                active: route().current('accounts.*'),
+                icon: Users,
+                testid: 'sidebar-link-accounts',
+            })
+        }
     }
 
     return items

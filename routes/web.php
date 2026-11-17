@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\KpiController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -45,10 +46,15 @@ Route::middleware(['auth', 'role:admin,user,auditor'])->group(function () {
             ->whereNumber('agent')->whereNumber('account')->name('agents.accounts.destroy');
     });
 
-    // target agent global: tulis hanya admin
+    // tulis hanya admin: target agent global & manajemen akun login
     Route::middleware('role:admin')->group(function () {
         Route::patch('/dashboard/agent-target', [AgentTargetController::class, 'update'])
             ->name('dashboard.agent-target.update');
+
+        Route::get('/accounts', [UserController::class, 'index'])->name('accounts.index');
+        Route::post('/accounts', [UserController::class, 'store'])->name('accounts.store');
+        Route::patch('/accounts/{user}', [UserController::class, 'update'])
+            ->whereNumber('user')->name('accounts.update');
     });
 });
 

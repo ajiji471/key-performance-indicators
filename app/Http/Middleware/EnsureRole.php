@@ -10,9 +10,10 @@ class EnsureRole
 {
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        $role = $request->user()?->role?->value;
+        $user = $request->user();
 
-        abort_unless(in_array($role, $roles, true), 403);
+        abort_unless($user?->is_active, 403);
+        abort_unless(in_array($user->role?->value, $roles, true), 403);
 
         return $next($request);
     }
