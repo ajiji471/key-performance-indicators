@@ -1,7 +1,6 @@
 <script setup>
 import { computed, inject } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
-import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 import { Button } from '@/Components/ui/button'
 import {
     SIDEBAR_KEY,
@@ -65,7 +64,6 @@ const menuItems = computed(() => {
                 class="flex items-center gap-2 rounded-md px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                 @click="closeMobile"
             >
-                <ApplicationLogo class="h-8 w-auto fill-current text-sidebar-primary" />
                 <span class="text-sm font-semibold tracking-wide text-sidebar-foreground">Go4Q</span>
             </Link>
 
