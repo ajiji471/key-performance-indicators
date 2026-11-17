@@ -336,7 +336,7 @@ onBeforeUnmount(resetPreview)
 
                 <AgentFormSection title="Device" description="Devices used by the agent.">
                     <div class="grid gap-2">
-                        <Label for="agent-device-user">Device user</Label>
+                        <Label for="agent-device-user">Device Name</Label>
                         <Input
                             id="agent-device-user"
                             v-model="form.device_user"
@@ -349,7 +349,7 @@ onBeforeUnmount(resetPreview)
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="agent-device-number">Device number</Label>
+                        <Label for="agent-device-number">Device user</Label>
                         <Input
                             id="agent-device-number"
                             v-model="form.device_number"
@@ -359,17 +359,6 @@ onBeforeUnmount(resetPreview)
                             data-testid="agent-form-device-number"
                         />
                         <InputError :message="form.errors.device_number" />
-                    </div>
-
-                    <div class="grid gap-2">
-                        <Label for="agent-device-released-at">Device released at</Label>
-                        <Input
-                            id="agent-device-released-at"
-                            v-model="form.device_released_at"
-                            type="date"
-                            data-testid="agent-form-device-released-at"
-                        />
-                        <InputError :message="form.errors.device_released_at" />
                     </div>
                 </AgentFormSection>
 
