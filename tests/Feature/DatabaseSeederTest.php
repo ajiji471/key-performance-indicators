@@ -49,8 +49,9 @@ class DatabaseSeederTest extends TestCase
         ];
         $saved = [];
         foreach ($keys as $key) {
-            $saved[$key] = [$_ENV[$key] ?? null, $_SERVER[$key] ?? null];
+            $saved[$key] = [$_ENV[$key] ?? null, $_SERVER[$key] ?? null, getenv($key)];
             unset($_ENV[$key], $_SERVER[$key]);
+            putenv($key);
         }
 
         try {
@@ -67,12 +68,15 @@ class DatabaseSeederTest extends TestCase
             $this->assertSame('password', $config['inputer2']['password']);
         } finally {
             foreach ($keys as $key) {
-                [$env, $server] = $saved[$key];
+                [$env, $server, $put] = $saved[$key];
                 if ($env !== null) {
                     $_ENV[$key] = $env;
                 }
                 if ($server !== null) {
                     $_SERVER[$key] = $server;
+                }
+                if ($put !== false) {
+                    putenv("{$key}={$put}");
                 }
             }
         }
