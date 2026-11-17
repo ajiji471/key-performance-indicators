@@ -128,3 +128,12 @@
   border-bottom: 1px solid hsl(var(--sidebar-border));
   border-radius: 0 0 10px 10px;
 }
+
+/* Respect OS reduce-motion: vaul injects .5s slide/fade with no media
+   query, so collapse it for users who ask for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  [data-vaul-drawer],
+  [data-vaul-overlay] {
+    animation-duration: 1ms !important;
+  }
+}
