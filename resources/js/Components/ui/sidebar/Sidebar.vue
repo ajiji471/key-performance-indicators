@@ -1,6 +1,6 @@
 <script setup>
 import { computed, inject } from 'vue'
-import { Sheet, SheetContent } from '@/Components/ui/sheet'
+import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from '@/Components/ui/drawer'
 import { SIDEBAR_KEY } from './context'
 
 const { isMobile, openMobile, setOpenMobile } = inject(SIDEBAR_KEY)
@@ -20,9 +20,11 @@ const mobileOpen = computed({
         <slot />
     </aside>
 
-    <Sheet v-else v-model:open="mobileOpen">
-        <SheetContent id="app-sidebar-mobile" data-slot="sidebar-mobile" class="w-72">
+    <Drawer v-else v-model:open="mobileOpen" direction="left">
+        <DrawerContent id="app-sidebar-mobile" data-slot="sidebar-mobile">
+            <DrawerTitle class="sr-only">Navigation menu</DrawerTitle>
+            <DrawerDescription class="sr-only">Main application navigation</DrawerDescription>
             <slot />
-        </SheetContent>
-    </Sheet>
+        </DrawerContent>
+    </Drawer>
 </template>

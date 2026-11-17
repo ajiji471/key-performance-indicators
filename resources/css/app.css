@@ -131,3 +131,43 @@
     animation-duration: 1ms !important;
   }
 }
+
+/* Drawer (vaul-vue) injects its own slide/fade keyframes and timing.
+   These rules only position and skin the panel per direction. */
+.drawer-panel {
+  position: fixed;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background-color: hsl(var(--sidebar));
+  color: hsl(var(--sidebar-foreground));
+  outline: none;
+}
+.drawer-panel[data-vaul-drawer-direction='left'] {
+  inset: 0 auto 0 0;
+  height: 100%;
+  width: 18rem;
+  max-width: 80%;
+  border-right: 1px solid hsl(var(--sidebar-border));
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.4);
+}
+.drawer-panel[data-vaul-drawer-direction='right'] {
+  inset: 0 0 0 auto;
+  height: 100%;
+  width: 18rem;
+  max-width: 80%;
+  border-left: 1px solid hsl(var(--sidebar-border));
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.4);
+}
+.drawer-panel[data-vaul-drawer-direction='bottom'] {
+  inset: auto 0 0 0;
+  max-height: 85vh;
+  border-top: 1px solid hsl(var(--sidebar-border));
+  border-radius: 10px 10px 0 0;
+}
+.drawer-panel[data-vaul-drawer-direction='top'] {
+  inset: 0 0 auto 0;
+  max-height: 85vh;
+  border-bottom: 1px solid hsl(var(--sidebar-border));
+  border-radius: 0 0 10px 10px;
+}

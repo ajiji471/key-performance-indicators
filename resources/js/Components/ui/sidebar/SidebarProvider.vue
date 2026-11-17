@@ -20,11 +20,11 @@ watch(openMobile, async (open) => {
     if (open || !isMobile.value) return
 
     await nextTick()
-    // tunggu animasi keluar sheet selesai sebelum mengembalikan fokus
+    // tunggu animasi keluar drawer (vaul-vue 0.5s) selesai sebelum mengembalikan fokus
     setTimeout(() => {
         if (openMobile.value) return
         document.querySelector('[data-testid="sidebar-toggle"]')?.focus()
-    }, 250)
+    }, 500)
 })
 
 watch(() => page.url, () => setOpenMobile(false))
