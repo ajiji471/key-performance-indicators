@@ -1,5 +1,5 @@
 <script setup>
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 import { DialogClose } from "reka-ui";
 import { Button } from '@/components/ui/button';
 

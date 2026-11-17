@@ -1,5 +1,5 @@
 <script setup>
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 import { Primitive } from "reka-ui";
 import { buttonVariants } from ".";
 
