@@ -37,6 +37,9 @@ class AgentAccountController extends Controller
             $account = $agent->accounts()->create($data);
             $this->credits->record($account, $request->user(), null);
             $this->activity->account(ActivityAction::Created, $account, $agent, $request->user());
+
+            $agent->updated_by = $request->user()->id;
+            $agent->save();
         });
 
         return Redirect::route('dashboard')->with('success', 'Platform account added.');
@@ -70,6 +73,8 @@ class AgentAccountController extends Controller
 
             if ($account->wasChanged()) {
                 $this->activity->account(ActivityAction::Updated, $account, $agent, $request->user());
+                $agent->updated_by = $request->user()->id;
+                $agent->save();
             }
         });
 
@@ -85,6 +90,9 @@ class AgentAccountController extends Controller
             $target = $agent->accounts()->findOrFail($account->id);
             $this->activity->account(ActivityAction::Deleted, $target, $agent, $request->user());
             $target->delete();
+
+            $agent->updated_by = $request->user()->id;
+            $agent->save();
         });
 
         return Redirect::route('dashboard')->with('success', 'Platform account deleted.');

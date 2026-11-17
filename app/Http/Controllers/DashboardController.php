@@ -23,7 +23,7 @@ class DashboardController extends Controller
         ]);
 
         $agents = Agent::query()
-            ->with(['accounts.platform'])
+            ->with(['accounts.platform', 'creator:id,name', 'updater:id,name'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -39,6 +39,8 @@ class DashboardController extends Controller
                 'avatar_url' => $agent->avatarUrl(),
                 'device_user' => $agent->device_user,
                 'created_at' => $agent->created_at?->toDateString(),
+                'creator' => $agent->creator?->name,
+                'updater' => $agent->updater?->name,
                 'platforms' => $agent->accounts->map(fn ($account) => [
                     'slug' => $account->platform->slug,
                     'name' => $account->platform->name,

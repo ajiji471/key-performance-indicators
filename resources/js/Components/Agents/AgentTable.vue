@@ -74,6 +74,7 @@ const getPercentageColor = (percentage) => {
                     <p class="truncate font-medium text-foreground">{{ agent.name }}</p>
                     <p class="truncate text-xs text-muted-foreground">Device : {{ agent.device_user || '-' }}</p>
                     <p class="text-xs text-muted-foreground/70">Created at: {{ agent.created_at ? new Date(agent.created_at + 'T00:00:00').toLocaleDateString('en-GB') : '-' }}</p>
+                    <p class="text-xs text-muted-foreground/70" :data-testid="`agent-by-mobile-${agent.id}`">By: {{ agent.creator || '-' }} · Last: {{ agent.updater || '-' }}</p>
                 </div>
 
                 <div class="flex shrink-0 items-center gap-1.5">
@@ -170,6 +171,7 @@ const getPercentageColor = (percentage) => {
                                 <div class="font-medium text-foreground">{{ agent.name }}</div>
                                 <div class="text-xs text-muted-foreground">Device : {{ agent.device_user || '-' }}</div>
                                 <div class="text-xs text-muted-foreground/70">Created at: {{ agent.created_at ? new Date(agent.created_at + 'T00:00:00').toLocaleDateString('en-GB') : '-' }}</div>
+                                <div class="text-xs text-muted-foreground/70" :data-testid="`agent-by-${agent.id}`">By: {{ agent.creator || '-' }} · Last: {{ agent.updater || '-' }}</div>
                             </div>
                         </div>
                     </td>

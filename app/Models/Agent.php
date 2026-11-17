@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'name', 'avatar_path', 'email', 'recovery_email', 'password',
     'birth_date', 'address', 'latitude', 'longitude', 'job', 'hobby', 'context',
-    'device_user', 'device_number', 'device_released_at', 'created_by',
+    'device_user', 'device_number', 'device_released_at', 'created_by', 'updated_by',
 ])]
 #[Hidden(['password'])]
 class Agent extends Model
@@ -22,11 +22,11 @@ class Agent extends Model
     protected function casts(): array
     {
         return [
-            'password'           => 'encrypted', 
-            'birth_date'         => 'date:Y-m-d',
+            'password' => 'encrypted',
+            'birth_date' => 'date:Y-m-d',
             'device_released_at' => 'date:Y-m-d',
-            'latitude'           => 'decimal:7',
-            'longitude'          => 'decimal:7',
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
         ];
     }
 
@@ -43,6 +43,11 @@ class Agent extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function tasks(): HasMany

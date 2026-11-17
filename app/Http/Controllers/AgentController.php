@@ -74,7 +74,7 @@ class AgentController extends Controller
     // dipakai popup profile; sengaja tanpa page Inertia
     public function show(Agent $agent): JsonResponse
     {
-        $agent->load(['accounts.platform', 'creator:id,name']);
+        $agent->load(['accounts.platform', 'creator:id,name', 'updater:id,name']);
 
         return response()->json([
             'agent' => [
@@ -96,6 +96,7 @@ class AgentController extends Controller
                 'device_released_at' => $agent->device_released_at?->toDateString(),
                 'created_at' => $agent->created_at?->toDateString(),
                 'creator' => $agent->creator?->name,
+                'updater' => $agent->updater?->name,
                 'accounts' => $agent->accounts->map(fn ($account) => [
                     'id' => $account->id,
                     'platform_id' => $account->platform_id,
@@ -142,6 +143,10 @@ class AgentController extends Controller
                     $agent->avatar_path = $avatarPath;
                 }
 
+                if ($agent->isDirty()) {
+                    $agent->updated_by = $request->user()->id;
+                }
+
                 $agent->save();
 
                 if ($agent->wasChanged()) {
@@ -181,6 +186,7 @@ class AgentController extends Controller
                 if ($existing) {
                     $this->activity->account(ActivityAction::Deleted, $existing, $agent, $inputer);
                     $existing->delete();
+                    $agent->updated_by = $inputer->id;
                 }
 
                 continue;
@@ -204,6 +210,7 @@ class AgentController extends Controller
 
                 if ($account->wasChanged()) {
                     $this->activity->account(ActivityAction::Updated, $account, $agent, $inputer);
+                    $agent->updated_by = $inputer->id;
                 }
             } else {
                 $account = $agent->accounts()->create([
@@ -213,9 +220,14 @@ class AgentController extends Controller
                 ]);
 
                 $this->activity->account(ActivityAction::Created, $account, $agent, $inputer);
+                $agent->updated_by = $inputer->id;
             }
 
             $this->credits->record($account, $inputer, $previousStatus);
+        }
+
+        if ($agent->isDirty()) {
+            $agent->save();
         }
     }
 
