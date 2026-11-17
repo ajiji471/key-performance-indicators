@@ -1,6 +1,7 @@
 <script setup>
-defineProps({
-    logs: { type: Array, required: true },
+const props = defineProps({
+    logs:     { type: Array, required: true },
+    timezone: { type: String, default: 'UTC' },
 })
 
 const verbs = { created: 'added', updated: 'updated', deleted: 'deleted' }
@@ -12,7 +13,7 @@ const statusLabels = {
     trouble: 'Trouble',
 }
 
-const whenFormatter = new Intl.DateTimeFormat('en-US', {
+const formatWhen = (value) => new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: '2-digit',
     year: 'numeric',
@@ -20,10 +21,8 @@ const whenFormatter = new Intl.DateTimeFormat('en-US', {
     minute: '2-digit',
     second: '2-digit',
     hour12: true,
-    timeZone: 'UTC',
-})
-
-const formatWhen = (value) => whenFormatter.format(new Date(value))
+    timeZone: props.timezone,
+}).format(new Date(value))
 
 const activityText = (log) => {
     const verb = verbs[log.action] ?? log.action

@@ -13,8 +13,8 @@ import AgentFormCard from '@/Components/Agents/AgentFormCard.vue'
 
 // objek data di atas
 const chartCards = [
-    { key: 'today', title: 'Today' },
-    { key: 'month', title: 'Month' },
+    { key: 'today', title: 'Updated today' },
+    { key: 'month', title: 'Updated this month' },
     { key: 'all',   title: 'All' },
 ]
 

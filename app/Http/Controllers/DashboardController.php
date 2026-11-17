@@ -30,9 +30,6 @@ class DashboardController extends Controller
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->when($filters['platform'] ?? null, function ($query, $platformId) {
-                $query->whereHas('accounts', fn ($q) => $q->where('platform_id', $platformId));
-            })
             ->orderBy('name', $filters['sort'] ?? 'asc')
             ->paginate(10)
             ->withQueryString()
@@ -60,7 +57,7 @@ class DashboardController extends Controller
             'agent_total' => Agent::count(),
             'agent_target' => (int) Setting::get('agent_target', 200),
             'platforms' => Platform::orderBy('sort')->get(['id', 'slug', 'name']),
-            'filters' => $request->only(['search', 'platform', 'sort']),
+            'filters' => $request->only(['search', 'sort']),
         ]);
     }
 

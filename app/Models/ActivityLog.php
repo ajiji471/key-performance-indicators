@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\AccountStatus;
 use App\Enums\ActivityAction;
 use App\Enums\ActivitySubject;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,5 +33,11 @@ class ActivityLog extends Model
     public function inputer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'inputer_id');
+    }
+
+    // sertakan offset agar frontend tidak menebak zona waktu browser
+    protected function serializeDate(DateTimeInterface $date): string
+    {
+        return $date->format(DateTimeInterface::ATOM);
     }
 }

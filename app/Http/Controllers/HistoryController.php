@@ -31,6 +31,7 @@ class HistoryController extends Controller
         return Inertia::render('History/Index', [
             'logs' => $logs,
             'filters' => ['from' => $from, 'until' => $until],
+            'timezone' => config('app.timezone'),
         ]);
     }
 }
